@@ -141,20 +141,54 @@ html, body, [class*="css"], .stApp {
     color: #1C1C1E !important;
 }
 
+/* ── Liquid Glass Ambient Color Orbs (Fixed in viewport) ──── */
+.ambient-orb-blue {
+    position: fixed;
+    top: 5%;
+    left: 8%;
+    width: 520px;
+    height: 520px;
+    background: radial-gradient(circle, rgba(0, 122, 255, 0.22) 0%, rgba(88, 86, 214, 0.12) 50%, transparent 70%);
+    filter: blur(80px);
+    -webkit-filter: blur(80px);
+    border-radius: 50%;
+    z-index: 0;
+    pointer-events: none;
+    transform: translateZ(0);
+}
+
+.ambient-orb-cyan {
+    position: fixed;
+    bottom: 8%;
+    right: 6%;
+    width: 560px;
+    height: 560px;
+    background: radial-gradient(circle, rgba(50, 199, 235, 0.25) 0%, rgba(52, 199, 89, 0.12) 50%, transparent 70%);
+    filter: blur(90px);
+    -webkit-filter: blur(90px);
+    border-radius: 50%;
+    z-index: 0;
+    pointer-events: none;
+    transform: translateZ(0);
+}
+
 /* ── Container Layout ───────────────────────────────────── */
 .block-container {
+    position: relative !important;
+    z-index: 1 !important;
     padding-top: 1.5rem !important;
-    padding-bottom: 3rem !important;
+    padding-bottom: 3.5rem !important;
     max-width: 1100px !important;
 }
 
-/* ── Header Chrome Clean Up ─────────────────────────────── */
+/* ── Header Chrome Clean Up (Liquid Frosted Glass) ──────── */
 #MainMenu { visibility: hidden; }
 footer { visibility: hidden; }
 header[data-testid="stHeader"] {
-    background: rgba(242, 242, 247, 0.8) !important;
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+    background: rgba(242, 242, 247, 0.65) !important;
+    backdrop-filter: blur(20px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.5) !important;
 }
 
 /* ── Global Typography Hierarchy & High Contrast ────────── */
@@ -178,9 +212,10 @@ p, span, label, div {
     padding: 2.2rem 2.6rem;
     margin-bottom: 1.8rem;
     color: #FFFFFF !important;
-    box-shadow: 0 8px 30px rgba(0, 122, 255, 0.22);
+    box-shadow: 0 10px 32px rgba(0, 122, 255, 0.24);
     position: relative;
     overflow: hidden;
+    border-top: 1px solid rgba(255, 255, 255, 0.4);
 }
 .hero-banner::after {
     content: '';
@@ -189,7 +224,7 @@ p, span, label, div {
     right: -20%;
     width: 480px;
     height: 480px;
-    background: radial-gradient(circle, rgba(255,255,255,0.12) 0%, transparent 70%);
+    background: radial-gradient(circle, rgba(255,255,255,0.14) 0%, transparent 70%);
     border-radius: 50%;
     pointer-events: none;
 }
@@ -211,7 +246,7 @@ p, span, label, div {
 .hero-badge {
     display: inline-block;
     background: rgba(255, 255, 255, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.4);
     border-radius: 999px;
     padding: 0.25rem 0.85rem;
     font-size: 0.72rem;
@@ -234,35 +269,55 @@ p, span, label, div {
     padding-left: 2px !important;
 }
 
-/* ── Apple Health Cards ─────────────────────────────────── */
-.apple-card {
-    background: #FFFFFF !important;
-    border: 1px solid rgba(0, 0, 0, 0.06) !important;
-    border-radius: 18px !important;
+/* ── Apple Liquid Glass Containers (Frosted Specification) ── */
+.apple-glass-card {
+    background: rgba(255, 255, 255, 0.65) !important;
+    backdrop-filter: blur(20px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+    border-radius: 20px !important;
+    border: 1px solid rgba(255, 255, 255, 0.5) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.85) !important;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.04), inset 0 1px 1px 0 rgba(255, 255, 255, 0.6) !important;
     padding: 1.4rem 1.6rem !important;
     margin-bottom: 1rem !important;
-    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.04) !important;
-    transition: box-shadow 0.2s ease, transform 0.15s ease;
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
-.apple-card:hover {
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.07) !important;
+.apple-glass-card:hover {
+    box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.07), inset 0 1px 1px 0 rgba(255, 255, 255, 0.8) !important;
     transform: translateY(-1px);
 }
 
-/* ── Clinical Reference Cards ───────────────────────────── */
+/* ── Input Parameter Glass Container ─────────────────────── */
+div[data-testid="stVerticalBlockBorderWrapper"] {
+    background: rgba(255, 255, 255, 0.65) !important;
+    backdrop-filter: blur(20px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+    border-radius: 20px !important;
+    border: 1px solid rgba(255, 255, 255, 0.5) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.85) !important;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.04), inset 0 1px 1px 0 rgba(255, 255, 255, 0.6) !important;
+    padding: 1.2rem 1.4rem !important;
+    margin-bottom: 1rem !important;
+}
+
+/* ── Clinical Reference Range Cards (Liquid Frosted Glass) ─ */
 .range-card {
-    background: #FFFFFF !important;
-    border: 1px solid rgba(0, 0, 0, 0.06) !important;
-    border-radius: 18px !important;
+    background: rgba(255, 255, 255, 0.65) !important;
+    backdrop-filter: blur(20px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+    border-radius: 20px !important;
+    border: 1px solid rgba(255, 255, 255, 0.5) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.85) !important;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.04), inset 0 1px 1px 0 rgba(255, 255, 255, 0.6) !important;
     padding: 1.2rem 1.1rem !important;
-    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.035) !important;
     text-align: center;
-    transition: all 0.2s ease;
+    transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
     height: 100%;
 }
 .range-card:hover {
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06) !important;
+    box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.08), inset 0 1px 1px 0 rgba(255, 255, 255, 0.85) !important;
     transform: translateY(-2px);
+    background: rgba(255, 255, 255, 0.78) !important;
 }
 .range-card .range-icon {
     font-size: 1.8rem;
@@ -290,20 +345,24 @@ p, span, label, div {
     letter-spacing: 0.2px;
 }
 .badge-normal {
-    background: rgba(52, 199, 89, 0.14) !important;
+    background: rgba(52, 199, 89, 0.16) !important;
     color: #248A3D !important;
 }
 .badge-danger {
-    background: rgba(255, 59, 48, 0.14) !important;
+    background: rgba(255, 59, 48, 0.16) !important;
     color: #D70015 !important;
 }
 
-/* ── Risk Result Banners ────────────────────────────────── */
+/* ── Risk Result Glass Panels (Liquid Frosted Glass) ─────── */
 .risk-card {
-    border-radius: 18px !important;
+    border-radius: 20px !important;
     padding: 1.6rem 1.8rem !important;
     margin: 0.6rem 0 !important;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05) !important;
+    backdrop-filter: blur(20px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.85) !important;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.04), inset 0 1px 1px 0 rgba(255, 255, 255, 0.6) !important;
+    transition: all 0.2s ease;
 }
 .risk-card h3 {
     margin: 0 0 0.5rem 0 !important;
@@ -311,29 +370,35 @@ p, span, label, div {
     font-weight: 700 !important;
 }
 .risk-high {
-    background: #FFF2F2 !important;
+    background: rgba(255, 240, 240, 0.72) !important;
     border: 1.5px solid rgba(255, 59, 48, 0.25) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.85) !important;
 }
 .risk-high h3 { color: #D70015 !important; }
 .risk-low {
-    background: #F0FAF2 !important;
+    background: rgba(240, 252, 244, 0.72) !important;
     border: 1.5px solid rgba(52, 199, 89, 0.25) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.85) !important;
 }
 .risk-low h3 { color: #248A3D !important; }
 .risk-medium {
-    background: #FFF9EE !important;
+    background: rgba(255, 249, 238, 0.72) !important;
     border: 1.5px solid rgba(255, 149, 0, 0.25) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.85) !important;
 }
 .risk-medium h3 { color: #C93400 !important; }
 
-/* ── Metric Summary Tiles ───────────────────────────────── */
+/* ── Metric Summary Tiles (Liquid Frosted Glass) ────────── */
 .metric-tile {
-    background: #FFFFFF !important;
-    border: 1px solid rgba(0, 0, 0, 0.06) !important;
-    border-radius: 16px !important;
+    background: rgba(255, 255, 255, 0.68) !important;
+    backdrop-filter: blur(20px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+    border-radius: 20px !important;
+    border: 1px solid rgba(255, 255, 255, 0.5) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.85) !important;
     padding: 1.1rem 1.2rem !important;
     text-align: center;
-    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.035) !important;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.04), inset 0 1px 1px 0 rgba(255, 255, 255, 0.6) !important;
 }
 .metric-tile .value {
     font-size: 2rem !important;
@@ -350,18 +415,21 @@ p, span, label, div {
     letter-spacing: 0.4px;
 }
 
-/* ── Disclaimer Box ─────────────────────────────────────── */
+/* ── Medical Disclaimer Box (Liquid Frosted Glass) ──────── */
 .disclaimer {
-    background: #FFFFFF !important;
-    border: 1px solid rgba(0, 0, 0, 0.06) !important;
+    background: rgba(255, 255, 255, 0.68) !important;
+    backdrop-filter: blur(20px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.5) !important;
     border-left: 5px solid #007AFF !important;
-    border-radius: 14px !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.85) !important;
+    border-radius: 20px !important;
     padding: 1.2rem 1.5rem !important;
     font-size: 0.88rem !important;
     color: #3A3A3C !important;
     line-height: 1.55;
     margin-top: 1.5rem !important;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03) !important;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.04), inset 0 1px 1px 0 rgba(255, 255, 255, 0.6) !important;
 }
 
 /* ── Force all Markdown text & headings to high-contrast Apple dark text ── */
@@ -423,11 +491,11 @@ div[data-testid="stSlider"] div[role="slider"] {
     padding: 0.75rem 2rem !important;
     letter-spacing: -0.01em !important;
     transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1) !important;
-    box-shadow: 0 4px 14px rgba(0, 122, 255, 0.28) !important;
+    box-shadow: 0 6px 18px rgba(0, 122, 255, 0.32) !important;
 }
 .stButton > button[kind="primary"]:hover {
     background: #0066DD !important;
-    box-shadow: 0 6px 20px rgba(0, 122, 255, 0.38) !important;
+    box-shadow: 0 8px 24px rgba(0, 122, 255, 0.42) !important;
     transform: translateY(-1px) !important;
 }
 .stButton > button[kind="primary"]:active {
@@ -435,10 +503,13 @@ div[data-testid="stSlider"] div[role="slider"] {
     box-shadow: 0 2px 6px rgba(0, 122, 255, 0.2) !important;
 }
 
-/* ── Developer Sidebar Drawer ───────────────────────────── */
+/* ── Developer Sidebar Drawer (Liquid Frosted Glass) ────── */
 section[data-testid="stSidebar"] {
-    background-color: #F8F8FA !important;
-    border-right: 1px solid rgba(0, 0, 0, 0.08) !important;
+    background-color: rgba(248, 248, 250, 0.75) !important;
+    backdrop-filter: blur(25px) saturate(190%) !important;
+    -webkit-backdrop-filter: blur(25px) saturate(190%) !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.6) !important;
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.03) !important;
 }
 section[data-testid="stSidebar"] .block-container {
     padding-top: 1.2rem !important;
@@ -453,27 +524,34 @@ section[data-testid="stSidebar"] label {
     color: #1C1C1E !important;
 }
 
-/* ── Expanders & Accordions ─────────────────────────────── */
+/* ── Expanders & Accordions (Liquid Frosted Glass) ───────── */
 details {
-    background: #FFFFFF !important;
-    border: 1px solid rgba(0, 0, 0, 0.06) !important;
-    border-radius: 16px !important;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03) !important;
-    margin-bottom: 0.8rem !important;
+    background: rgba(255, 255, 255, 0.65) !important;
+    backdrop-filter: blur(20px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+    border-radius: 20px !important;
+    border: 1px solid rgba(255, 255, 255, 0.5) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.85) !important;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.03), inset 0 1px 1px 0 rgba(255, 255, 255, 0.6) !important;
+    margin-bottom: 0.9rem !important;
+    overflow: hidden;
 }
 summary {
     font-weight: 600 !important;
     color: #1C1C1E !important;
-    padding: 0.8rem 1rem !important;
+    padding: 0.85rem 1.1rem !important;
 }
 
-/* ── Metrics in Developer Panel ─────────────────────────── */
+/* ── Metrics in Developer Panel (Liquid Frosted Glass) ──── */
 div[data-testid="stMetric"] {
-    background: #FFFFFF !important;
-    border: 1px solid rgba(0, 0, 0, 0.05) !important;
-    border-radius: 14px !important;
-    padding: 0.8rem 1rem !important;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.025) !important;
+    background: rgba(255, 255, 255, 0.65) !important;
+    backdrop-filter: blur(20px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+    border-radius: 16px !important;
+    border: 1px solid rgba(255, 255, 255, 0.5) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.85) !important;
+    padding: 0.85rem 1rem !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.025), inset 0 1px 1px 0 rgba(255, 255, 255, 0.6) !important;
 }
 div[data-testid="stMetric"] label {
     color: #8E8E93 !important;
@@ -896,26 +974,26 @@ def main():
     primary_feats   = [f for f in feature_names if FEATURE_META[f]["primary"]]
     secondary_feats = [f for f in feature_names if not FEATURE_META[f]["primary"]]
 
-    col_a, col_b = st.columns(2)
     input_values = {}
-
-    for idx, feat in enumerate(primary_feats):
-        meta = FEATURE_META[feat]
-        default_val = preset[feat] if preset else meta["default"]
-        container = col_a if idx % 2 == 0 else col_b
-        with container:
-            label_str = f"{meta['label']}"
-            if meta["unit"]:
-                label_str += f"  ({meta['unit']})"
-            val = st.slider(
-                label_str,
-                min_value=meta["type"](meta["min"]),
-                max_value=meta["type"](meta["max"]),
-                value=meta["type"](st.session_state.get(f"input_{feat}", default_val)),
-                step=meta["type"](meta["step"]) if meta["type"] == float else meta["step"],
-                key=f"input_{feat}",
-            )
-            input_values[feat] = val
+    with st.container(border=True):
+        col_a, col_b = st.columns(2)
+        for idx, feat in enumerate(primary_feats):
+            meta = FEATURE_META[feat]
+            default_val = preset[feat] if preset else meta["default"]
+            container = col_a if idx % 2 == 0 else col_b
+            with container:
+                label_str = f"{meta['label']}"
+                if meta["unit"]:
+                    label_str += f"  ({meta['unit']})"
+                val = st.slider(
+                    label_str,
+                    min_value=meta["type"](meta["min"]),
+                    max_value=meta["type"](meta["max"]),
+                    value=meta["type"](st.session_state.get(f"input_{feat}", default_val)),
+                    step=meta["type"](meta["step"]) if meta["type"] == float else meta["step"],
+                    key=f"input_{feat}",
+                )
+                input_values[feat] = val
 
     if secondary_feats:
         with st.expander("🔧  Advanced Clinical Parameters (click to expand)", expanded=False):
