@@ -141,16 +141,16 @@ html, body, [class*="css"], .stApp {
     color: #1C1C1E !important;
 }
 
-/* ── Liquid Glass Ambient Color Orbs (Fixed in viewport) ──── */
+/* ── Fixed Ambient Color Orbs for High Optical Transparency Refraction ── */
 .ambient-orb-blue {
     position: fixed;
-    top: 5%;
-    left: 8%;
-    width: 520px;
-    height: 520px;
-    background: radial-gradient(circle, rgba(0, 122, 255, 0.22) 0%, rgba(88, 86, 214, 0.12) 50%, transparent 70%);
-    filter: blur(80px);
-    -webkit-filter: blur(80px);
+    top: 4%;
+    left: 6%;
+    width: 560px;
+    height: 560px;
+    background: radial-gradient(circle, rgba(0, 122, 255, 0.28) 0%, rgba(88, 86, 214, 0.16) 45%, transparent 70%);
+    filter: blur(85px);
+    -webkit-filter: blur(85px);
     border-radius: 50%;
     z-index: 0;
     pointer-events: none;
@@ -159,13 +159,13 @@ html, body, [class*="css"], .stApp {
 
 .ambient-orb-cyan {
     position: fixed;
-    bottom: 8%;
-    right: 6%;
-    width: 560px;
-    height: 560px;
-    background: radial-gradient(circle, rgba(50, 199, 235, 0.25) 0%, rgba(52, 199, 89, 0.12) 50%, transparent 70%);
-    filter: blur(90px);
-    -webkit-filter: blur(90px);
+    bottom: 6%;
+    right: 5%;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(50, 199, 235, 0.30) 0%, rgba(52, 199, 89, 0.16) 50%, transparent 70%);
+    filter: blur(95px);
+    -webkit-filter: blur(95px);
     border-radius: 50%;
     z-index: 0;
     pointer-events: none;
@@ -185,10 +185,10 @@ html, body, [class*="css"], .stApp {
 #MainMenu { visibility: hidden; }
 footer { visibility: hidden; }
 header[data-testid="stHeader"] {
-    background: rgba(242, 242, 247, 0.65) !important;
-    backdrop-filter: blur(20px) saturate(180%) !important;
-    -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.5) !important;
+    background: rgba(242, 242, 247, 0.45) !important;
+    backdrop-filter: blur(28px) saturate(210%) !important;
+    -webkit-backdrop-filter: blur(28px) saturate(210%) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.6) !important;
 }
 
 /* ── Global Typography Hierarchy & High Contrast ────────── */
@@ -215,7 +215,8 @@ p, span, label, div {
     box-shadow: 0 10px 32px rgba(0, 122, 255, 0.24);
     position: relative;
     overflow: hidden;
-    border-top: 1px solid rgba(255, 255, 255, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.45);
+    border-top: 1px solid rgba(255, 255, 255, 0.85);
 }
 .hero-banner::after {
     content: '';
@@ -269,55 +270,171 @@ p, span, label, div {
     padding-left: 2px !important;
 }
 
-/* ── Apple Liquid Glass Containers (Frosted Specification) ── */
+/* ── True Apple Liquid Glass Shader (60%–70% Optical Transparency) ── */
 .apple-glass-card {
-    background: rgba(255, 255, 255, 0.65) !important;
-    backdrop-filter: blur(20px) saturate(180%) !important;
-    -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.38) 0%, rgba(255, 255, 255, 0.22) 100%) !important;
+    backdrop-filter: blur(28px) saturate(210%) !important;
+    -webkit-backdrop-filter: blur(28px) saturate(210%) !important;
     border-radius: 20px !important;
-    border: 1px solid rgba(255, 255, 255, 0.5) !important;
-    border-top: 1px solid rgba(255, 255, 255, 0.85) !important;
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.04), inset 0 1px 1px 0 rgba(255, 255, 255, 0.6) !important;
+    border: 1px solid rgba(255, 255, 255, 0.45) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.75) !important;
+    box-shadow: 0 10px 32px 0 rgba(0, 0, 0, 0.06), inset 0 1px 1px 0 rgba(255, 255, 255, 0.7) !important;
     padding: 1.4rem 1.6rem !important;
     margin-bottom: 1rem !important;
     transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .apple-glass-card:hover {
-    box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.07), inset 0 1px 1px 0 rgba(255, 255, 255, 0.8) !important;
+    box-shadow: 0 14px 44px 0 rgba(0, 0, 0, 0.08), inset 0 1px 1px 0 rgba(255, 255, 255, 0.9) !important;
     transform: translateY(-1px);
 }
 
-/* ── Input Parameter Glass Container ─────────────────────── */
+/* ── Input Parameter Glass Container (60%–70% Transparency) ── */
 div[data-testid="stVerticalBlockBorderWrapper"] {
-    background: rgba(255, 255, 255, 0.65) !important;
-    backdrop-filter: blur(20px) saturate(180%) !important;
-    -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.38) 0%, rgba(255, 255, 255, 0.22) 100%) !important;
+    backdrop-filter: blur(28px) saturate(210%) !important;
+    -webkit-backdrop-filter: blur(28px) saturate(210%) !important;
     border-radius: 20px !important;
-    border: 1px solid rgba(255, 255, 255, 0.5) !important;
-    border-top: 1px solid rgba(255, 255, 255, 0.85) !important;
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.04), inset 0 1px 1px 0 rgba(255, 255, 255, 0.6) !important;
-    padding: 1.2rem 1.4rem !important;
-    margin-bottom: 1rem !important;
+    border: 1px solid rgba(255, 255, 255, 0.45) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.75) !important;
+    box-shadow: 0 10px 32px 0 rgba(0, 0, 0, 0.06), inset 0 1px 1px 0 rgba(255, 255, 255, 0.7) !important;
+    padding: 1.3rem 1.5rem !important;
+    margin-bottom: 1.1rem !important;
+}
+
+/* ── Metric Dual-Input Header Row ── */
+.metric-row-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 0.15rem;
+    padding-left: 2px;
+    padding-right: 2px;
+}
+.metric-row-title {
+    font-weight: 700;
+    font-size: 0.92rem;
+    color: #1C1C1E;
+    letter-spacing: -0.01em;
+}
+.metric-row-unit {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #8E8E93;
+    letter-spacing: 0.3px;
+}
+
+/* ── Apple-Style Liquid Glass Interactive Slider Thumb (Dragging Head) ── */
+/* BaseWeb Streamlit Slider & Native Range Input Thumbs */
+div[data-testid="stSlider"] div[role="slider"],
+input[type="range"]::-webkit-slider-thumb,
+input[type="range"]::-moz-range-thumb {
+    width: 24px !important;
+    height: 32px !important;
+    border-radius: 8px !important;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.45) 0%, rgba(255, 255, 255, 0.25) 100%) !important;
+    backdrop-filter: blur(12px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(12px) saturate(180%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.8) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.95) !important;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.15), inset 0 1px 1px rgba(255, 255, 255, 0.9) !important;
+    cursor: grab !important;
+    transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.15s ease, background 0.15s ease !important;
+    outline: none !important;
+}
+
+/* Hover: Subtle scale-up with heightened top specular reflection */
+div[data-testid="stSlider"] div[role="slider"]:hover,
+input[type="range"]::-webkit-slider-thumb:hover,
+input[type="range"]::-moz-range-thumb:hover {
+    transform: scale(1.06) !important;
+    border-top: 1px solid rgba(255, 255, 255, 1) !important;
+    box-shadow: 0 4px 16px rgba(0, 122, 255, 0.22), inset 0 1px 1.5px rgba(255, 255, 255, 1) !important;
+}
+
+/* Active / Dragging: Elastic tactile feedback + semi-transparent glass fill */
+div[data-testid="stSlider"] div[role="slider"]:active,
+div[data-testid="stSlider"] div[role="slider"]:focus,
+input[type="range"]::-webkit-slider-thumb:active,
+input[type="range"]::-moz-range-thumb:active {
+    transform: scale(1.12) !important;
+    cursor: grabbing !important;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.50) 0%, rgba(255, 255, 255, 0.30) 100%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.95) !important;
+    box-shadow: 0 6px 20px rgba(0, 122, 255, 0.25), inset 0 1px 2px rgba(255, 255, 255, 1) !important;
+}
+
+/* Slider Track styling: Semi-translucent with Apple Blue active tint */
+div[data-testid="stSlider"] {
+    padding-top: 6px !important;
+}
+div[data-testid="stSlider"] div[data-baseweb="slider"] {
+    margin-top: -2px !important;
+}
+div[data-testid="stSlider"] div[data-baseweb="slider"] > div > div {
+    border-radius: 999px !important;
+}
+div[data-testid="stSliderTickBarMin"],
+div[data-testid="stSliderTickBarMax"] {
+    color: #8E8E93 !important;
+    font-size: 0.76rem !important;
+    font-weight: 500 !important;
+}
+
+/* ── Apple-Style Liquid Glass Numeric Entry Box ───────────── */
+div[data-testid="stNumberInput"] {
+    padding-top: 0px !important;
+    margin-top: 0px !important;
+}
+div[data-testid="stNumberInput"] div[data-baseweb="input"] {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.38) 0%, rgba(255, 255, 255, 0.22) 100%) !important;
+    backdrop-filter: blur(28px) saturate(210%) !important;
+    -webkit-backdrop-filter: blur(28px) saturate(210%) !important;
+    border-radius: 12px !important;
+    border: 1px solid rgba(255, 255, 255, 0.45) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.75) !important;
+    box-shadow: 0 4px 14px 0 rgba(0, 0, 0, 0.04), inset 0 1px 1px 0 rgba(255, 255, 255, 0.7) !important;
+    transition: all 0.2s ease !important;
+    height: 42px !important;
+}
+div[data-testid="stNumberInput"] div[data-baseweb="input"]:focus-within {
+    border-color: #007AFF !important;
+    box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.22), inset 0 1px 1px 0 rgba(255, 255, 255, 0.9) !important;
+}
+div[data-testid="stNumberInput"] input {
+    font-weight: 700 !important;
+    font-size: 0.98rem !important;
+    color: #1C1C1E !important;
+    text-align: center !important;
+    font-variant-numeric: tabular-nums !important;
+}
+div[data-testid="stNumberInput"] button {
+    background: transparent !important;
+    border: none !important;
+    color: #8E8E93 !important;
+    transition: color 0.15s ease !important;
+}
+div[data-testid="stNumberInput"] button:hover {
+    color: #007AFF !important;
 }
 
 /* ── Clinical Reference Range Cards (Liquid Frosted Glass) ─ */
 .range-card {
-    background: rgba(255, 255, 255, 0.65) !important;
-    backdrop-filter: blur(20px) saturate(180%) !important;
-    -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.38) 0%, rgba(255, 255, 255, 0.22) 100%) !important;
+    backdrop-filter: blur(28px) saturate(210%) !important;
+    -webkit-backdrop-filter: blur(28px) saturate(210%) !important;
     border-radius: 20px !important;
-    border: 1px solid rgba(255, 255, 255, 0.5) !important;
-    border-top: 1px solid rgba(255, 255, 255, 0.85) !important;
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.04), inset 0 1px 1px 0 rgba(255, 255, 255, 0.6) !important;
+    border: 1px solid rgba(255, 255, 255, 0.45) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.75) !important;
+    box-shadow: 0 10px 32px 0 rgba(0, 0, 0, 0.06), inset 0 1px 1px 0 rgba(255, 255, 255, 0.7) !important;
     padding: 1.2rem 1.1rem !important;
     text-align: center;
     transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
     height: 100%;
 }
 .range-card:hover {
-    box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.08), inset 0 1px 1px 0 rgba(255, 255, 255, 0.85) !important;
+    box-shadow: 0 14px 44px 0 rgba(0, 0, 0, 0.08), inset 0 1px 1px rgba(255, 255, 255, 0.9) !important;
     transform: translateY(-2px);
-    background: rgba(255, 255, 255, 0.78) !important;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.45) 0%, rgba(255, 255, 255, 0.30) 100%) !important;
 }
 .range-card .range-icon {
     font-size: 1.8rem;
@@ -345,11 +462,11 @@ div[data-testid="stVerticalBlockBorderWrapper"] {
     letter-spacing: 0.2px;
 }
 .badge-normal {
-    background: rgba(52, 199, 89, 0.16) !important;
+    background: rgba(52, 199, 89, 0.18) !important;
     color: #248A3D !important;
 }
 .badge-danger {
-    background: rgba(255, 59, 48, 0.16) !important;
+    background: rgba(255, 59, 48, 0.18) !important;
     color: #D70015 !important;
 }
 
@@ -358,10 +475,10 @@ div[data-testid="stVerticalBlockBorderWrapper"] {
     border-radius: 20px !important;
     padding: 1.6rem 1.8rem !important;
     margin: 0.6rem 0 !important;
-    backdrop-filter: blur(20px) saturate(180%) !important;
-    -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
-    border-top: 1px solid rgba(255, 255, 255, 0.85) !important;
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.04), inset 0 1px 1px 0 rgba(255, 255, 255, 0.6) !important;
+    backdrop-filter: blur(28px) saturate(210%) !important;
+    -webkit-backdrop-filter: blur(28px) saturate(210%) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.75) !important;
+    box-shadow: 0 10px 32px 0 rgba(0, 0, 0, 0.06), inset 0 1px 1px 0 rgba(255, 255, 255, 0.7) !important;
     transition: all 0.2s ease;
 }
 .risk-card h3 {
@@ -370,35 +487,35 @@ div[data-testid="stVerticalBlockBorderWrapper"] {
     font-weight: 700 !important;
 }
 .risk-high {
-    background: rgba(255, 240, 240, 0.72) !important;
-    border: 1.5px solid rgba(255, 59, 48, 0.25) !important;
+    background: linear-gradient(135deg, rgba(255, 238, 238, 0.38) 0%, rgba(255, 238, 238, 0.22) 100%) !important;
+    border: 1.5px solid rgba(255, 59, 48, 0.35) !important;
     border-top: 1px solid rgba(255, 255, 255, 0.85) !important;
 }
 .risk-high h3 { color: #D70015 !important; }
 .risk-low {
-    background: rgba(240, 252, 244, 0.72) !important;
-    border: 1.5px solid rgba(52, 199, 89, 0.25) !important;
+    background: linear-gradient(135deg, rgba(234, 252, 240, 0.38) 0%, rgba(234, 252, 240, 0.22) 100%) !important;
+    border: 1.5px solid rgba(52, 199, 89, 0.35) !important;
     border-top: 1px solid rgba(255, 255, 255, 0.85) !important;
 }
 .risk-low h3 { color: #248A3D !important; }
 .risk-medium {
-    background: rgba(255, 249, 238, 0.72) !important;
-    border: 1.5px solid rgba(255, 149, 0, 0.25) !important;
+    background: linear-gradient(135deg, rgba(255, 248, 230, 0.38) 0%, rgba(255, 248, 230, 0.22) 100%) !important;
+    border: 1.5px solid rgba(255, 149, 0, 0.35) !important;
     border-top: 1px solid rgba(255, 255, 255, 0.85) !important;
 }
 .risk-medium h3 { color: #C93400 !important; }
 
 /* ── Metric Summary Tiles (Liquid Frosted Glass) ────────── */
 .metric-tile {
-    background: rgba(255, 255, 255, 0.68) !important;
-    backdrop-filter: blur(20px) saturate(180%) !important;
-    -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.38) 0%, rgba(255, 255, 255, 0.22) 100%) !important;
+    backdrop-filter: blur(28px) saturate(210%) !important;
+    -webkit-backdrop-filter: blur(28px) saturate(210%) !important;
     border-radius: 20px !important;
-    border: 1px solid rgba(255, 255, 255, 0.5) !important;
-    border-top: 1px solid rgba(255, 255, 255, 0.85) !important;
+    border: 1px solid rgba(255, 255, 255, 0.45) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.75) !important;
     padding: 1.1rem 1.2rem !important;
     text-align: center;
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.04), inset 0 1px 1px 0 rgba(255, 255, 255, 0.6) !important;
+    box-shadow: 0 10px 32px 0 rgba(0, 0, 0, 0.06), inset 0 1px 1px 0 rgba(255, 255, 255, 0.7) !important;
 }
 .metric-tile .value {
     font-size: 2rem !important;
@@ -417,19 +534,19 @@ div[data-testid="stVerticalBlockBorderWrapper"] {
 
 /* ── Medical Disclaimer Box (Liquid Frosted Glass) ──────── */
 .disclaimer {
-    background: rgba(255, 255, 255, 0.68) !important;
-    backdrop-filter: blur(20px) saturate(180%) !important;
-    -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
-    border: 1px solid rgba(255, 255, 255, 0.5) !important;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.38) 0%, rgba(255, 255, 255, 0.22) 100%) !important;
+    backdrop-filter: blur(28px) saturate(210%) !important;
+    -webkit-backdrop-filter: blur(28px) saturate(210%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.45) !important;
     border-left: 5px solid #007AFF !important;
-    border-top: 1px solid rgba(255, 255, 255, 0.85) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.75) !important;
     border-radius: 20px !important;
     padding: 1.2rem 1.5rem !important;
     font-size: 0.88rem !important;
     color: #3A3A3C !important;
     line-height: 1.55;
     margin-top: 1.5rem !important;
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.04), inset 0 1px 1px 0 rgba(255, 255, 255, 0.6) !important;
+    box-shadow: 0 10px 32px 0 rgba(0, 0, 0, 0.06), inset 0 1px 1px 0 rgba(255, 255, 255, 0.7) !important;
 }
 
 /* ── Force all Markdown text & headings to high-contrast Apple dark text ── */
@@ -448,39 +565,7 @@ div[data-testid="stMarkdownContainer"] span {
     color: #FFFFFF !important;
 }
 
-/* ── Slider Thumb Tooltips & Styling ── */
-div[data-testid="stThumbValue"],
-div[data-testid="stThumbValue"] * {
-    background-color: #007AFF !important;
-    color: #FFFFFF !important;
-    border-radius: 6px !important;
-    font-size: 0.76rem !important;
-    font-weight: 700 !important;
-}
-
-/* ── Streamlit Form Controls & Sliders ──────────────────── */
-div[data-testid="stWidgetLabel"] label,
-div[data-testid="stWidgetLabel"] p {
-    color: #1C1C1E !important;
-    font-weight: 600 !important;
-    font-size: 0.92rem !important;
-    letter-spacing: -0.01em;
-}
-div[data-testid="stSliderTickBarMin"],
-div[data-testid="stSliderTickBarMax"] {
-    color: #8E8E93 !important;
-    font-size: 0.78rem !important;
-    font-weight: 500 !important;
-}
-div[data-testid="stSlider"] div[role="slider"] {
-    background-color: #FFFFFF !important;
-    border: 2.5px solid #007AFF !important;
-    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.16) !important;
-    width: 22px !important;
-    height: 22px !important;
-}
-
-/* Primary Action Button (Apple Blue Pill) */
+/* ── Primary Action Button (Apple Blue Pill) ── */
 .stButton > button[kind="primary"] {
     background: #007AFF !important;
     color: #FFFFFF !important;
@@ -503,13 +588,13 @@ div[data-testid="stSlider"] div[role="slider"] {
     box-shadow: 0 2px 6px rgba(0, 122, 255, 0.2) !important;
 }
 
-/* ── Developer Sidebar Drawer (Liquid Frosted Glass) ────── */
+/* ── Developer Sidebar Drawer (High Transparency Liquid Glass) ── */
 section[data-testid="stSidebar"] {
-    background-color: rgba(248, 248, 250, 0.75) !important;
-    backdrop-filter: blur(25px) saturate(190%) !important;
-    -webkit-backdrop-filter: blur(25px) saturate(190%) !important;
+    background-color: rgba(248, 248, 250, 0.55) !important;
+    backdrop-filter: blur(30px) saturate(220%) !important;
+    -webkit-backdrop-filter: blur(30px) saturate(220%) !important;
     border-right: 1px solid rgba(255, 255, 255, 0.6) !important;
-    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.03) !important;
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.04) !important;
 }
 section[data-testid="stSidebar"] .block-container {
     padding-top: 1.2rem !important;
@@ -526,13 +611,13 @@ section[data-testid="stSidebar"] label {
 
 /* ── Expanders & Accordions (Liquid Frosted Glass) ───────── */
 details {
-    background: rgba(255, 255, 255, 0.65) !important;
-    backdrop-filter: blur(20px) saturate(180%) !important;
-    -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.38) 0%, rgba(255, 255, 255, 0.22) 100%) !important;
+    backdrop-filter: blur(28px) saturate(210%) !important;
+    -webkit-backdrop-filter: blur(28px) saturate(210%) !important;
     border-radius: 20px !important;
-    border: 1px solid rgba(255, 255, 255, 0.5) !important;
-    border-top: 1px solid rgba(255, 255, 255, 0.85) !important;
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.03), inset 0 1px 1px 0 rgba(255, 255, 255, 0.6) !important;
+    border: 1px solid rgba(255, 255, 255, 0.45) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.75) !important;
+    box-shadow: 0 10px 32px 0 rgba(0, 0, 0, 0.04), inset 0 1px 1px 0 rgba(255, 255, 255, 0.7) !important;
     margin-bottom: 0.9rem !important;
     overflow: hidden;
 }
@@ -544,14 +629,14 @@ summary {
 
 /* ── Metrics in Developer Panel (Liquid Frosted Glass) ──── */
 div[data-testid="stMetric"] {
-    background: rgba(255, 255, 255, 0.65) !important;
-    backdrop-filter: blur(20px) saturate(180%) !important;
-    -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.38) 0%, rgba(255, 255, 255, 0.22) 100%) !important;
+    backdrop-filter: blur(28px) saturate(210%) !important;
+    -webkit-backdrop-filter: blur(28px) saturate(210%) !important;
     border-radius: 16px !important;
-    border: 1px solid rgba(255, 255, 255, 0.5) !important;
-    border-top: 1px solid rgba(255, 255, 255, 0.85) !important;
+    border: 1px solid rgba(255, 255, 255, 0.45) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.75) !important;
     padding: 0.85rem 1rem !important;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.025), inset 0 1px 1px 0 rgba(255, 255, 255, 0.6) !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03), inset 0 1px 1px 0 rgba(255, 255, 255, 0.7) !important;
 }
 div[data-testid="stMetric"] label {
     color: #8E8E93 !important;
@@ -855,9 +940,41 @@ def plot_risk_gauge(probability):
 # ─────────────────────────────────────────────
 #  MAIN APPLICATION
 # ─────────────────────────────────────────────
+
+# ─────────────────────────────────────────────
+#  SYNCHRONIZED DUAL-INPUT STATE HANDLERS
+# ─────────────────────────────────────────────
+def sync_from_slider(feat):
+    """Update canonical value and numeric box when slider thumb moves."""
+    val = st.session_state[f"slider_{feat}"]
+    st.session_state[f"input_{feat}"] = val
+    st.session_state[f"num_{feat}"] = val
+
+
+def sync_from_num(feat):
+    """Update canonical value and slider when numeric box input changes."""
+    meta = FEATURE_META[feat]
+    val = st.session_state[f"num_{feat}"]
+    # Clamp bounds and round based on step increment to prevent feedback loops
+    val = max(meta["min"], min(meta["max"], val))
+    val = meta["type"](round(val, 2) if meta["type"] == float else round(val))
+    st.session_state[f"input_{feat}"] = val
+    st.session_state[f"slider_{feat}"] = val
+    st.session_state[f"num_{feat}"] = val
+
 def main():
     if "predict_counter" not in st.session_state:
         st.session_state.predict_counter = 0
+
+    # Initialize bidirectional synchronized state for all features
+    for feat in ALL_FEATURES:
+        meta = FEATURE_META[feat]
+        default_val = meta["default"]
+        if f"input_{feat}" not in st.session_state:
+            typed_val = meta["type"](default_val)
+            st.session_state[f"input_{feat}"] = typed_val
+            st.session_state[f"slider_{feat}"] = typed_val
+            st.session_state[f"num_{feat}"] = typed_val
 
     # Hero Banner
     st.markdown("""
@@ -906,7 +1023,10 @@ def main():
             if preset_data:
                 for k, v in preset_data.items():
                     target_type = FEATURE_META[k]["type"]
-                    st.session_state[f"input_{k}"] = target_type(v)
+                    val = target_type(v)
+                    st.session_state[f"input_{k}"] = val
+                    st.session_state[f"slider_{k}"] = val
+                    st.session_state[f"num_{k}"] = val
             st.rerun()
 
         preset = PRESETS[selected_preset]
@@ -975,45 +1095,90 @@ def main():
     secondary_feats = [f for f in feature_names if not FEATURE_META[f]["primary"]]
 
     input_values = {}
+
+    # ── Primary Dual-Input Parameters (Liquid Glass Card) ──
     with st.container(border=True):
         col_a, col_b = st.columns(2)
         for idx, feat in enumerate(primary_feats):
             meta = FEATURE_META[feat]
-            default_val = preset[feat] if preset else meta["default"]
             container = col_a if idx % 2 == 0 else col_b
             with container:
-                label_str = f"{meta['label']}"
-                if meta["unit"]:
-                    label_str += f"  ({meta['unit']})"
-                val = st.slider(
-                    label_str,
-                    min_value=meta["type"](meta["min"]),
-                    max_value=meta["type"](meta["max"]),
-                    value=meta["type"](st.session_state.get(f"input_{feat}", default_val)),
-                    step=meta["type"](meta["step"]) if meta["type"] == float else meta["step"],
-                    key=f"input_{feat}",
-                )
-                input_values[feat] = val
-
-    if secondary_feats:
-        with st.expander("🔧  Advanced Clinical Parameters (click to expand)", expanded=False):
-            sec_cols = st.columns(min(len(secondary_feats), 4))
-            for idx, feat in enumerate(secondary_feats):
-                meta = FEATURE_META[feat]
-                default_val = preset[feat] if preset else meta["default"]
-                with sec_cols[idx % len(sec_cols)]:
-                    label_str = f"{meta['label']}"
-                    if meta["unit"]:
-                        label_str += f"  ({meta['unit']})"
-                    val = st.slider(
-                        label_str,
+                unit_str = f"({meta['unit']})" if meta["unit"] else ""
+                st.markdown(f'''
+                <div class="metric-row-header">
+                    <span class="metric-row-title">{meta["label"]}</span>
+                    <span class="metric-row-unit">{unit_str}</span>
+                </div>
+                ''', unsafe_allow_html=True)
+                
+                c_slide, c_num = st.columns([3.4, 1.25])
+                with c_slide:
+                    st.slider(
+                        label=meta["label"],
                         min_value=meta["type"](meta["min"]),
                         max_value=meta["type"](meta["max"]),
-                        value=meta["type"](st.session_state.get(f"input_{feat}", default_val)),
+                        value=meta["type"](st.session_state[f"slider_{feat}"]),
                         step=meta["type"](meta["step"]) if meta["type"] == float else meta["step"],
-                        key=f"input_{feat}",
+                        key=f"slider_{feat}",
+                        on_change=sync_from_slider,
+                        args=(feat,),
+                        label_visibility="collapsed",
                     )
-                    input_values[feat] = val
+                with c_num:
+                    st.number_input(
+                        label=meta["label"],
+                        min_value=meta["type"](meta["min"]),
+                        max_value=meta["type"](meta["max"]),
+                        value=meta["type"](st.session_state[f"num_{feat}"]),
+                        step=meta["type"](meta["step"]) if meta["type"] == float else meta["step"],
+                        key=f"num_{feat}",
+                        on_change=sync_from_num,
+                        args=(feat,),
+                        label_visibility="collapsed",
+                    )
+                input_values[feat] = st.session_state[f"input_{feat}"]
+
+    # ── Secondary Dual-Input Parameters (Collapsible Liquid Glass Expander) ──
+    if secondary_feats:
+        with st.expander("🔧  Advanced Clinical Parameters (click to expand)", expanded=False):
+            sec_cols = st.columns(2)
+            for idx, feat in enumerate(secondary_feats):
+                meta = FEATURE_META[feat]
+                with sec_cols[idx % 2]:
+                    unit_str = f"({meta['unit']})" if meta["unit"] else ""
+                    st.markdown(f'''
+                    <div class="metric-row-header">
+                        <span class="metric-row-title">{meta["label"]}</span>
+                        <span class="metric-row-unit">{unit_str}</span>
+                    </div>
+                    ''', unsafe_allow_html=True)
+                    
+                    c_slide, c_num = st.columns([3.4, 1.25])
+                    with c_slide:
+                        st.slider(
+                            label=meta["label"],
+                            min_value=meta["type"](meta["min"]),
+                            max_value=meta["type"](meta["max"]),
+                            value=meta["type"](st.session_state[f"slider_{feat}"]),
+                            step=meta["type"](meta["step"]) if meta["type"] == float else meta["step"],
+                            key=f"slider_{feat}",
+                            on_change=sync_from_slider,
+                            args=(feat,),
+                            label_visibility="collapsed",
+                        )
+                    with c_num:
+                        st.number_input(
+                            label=meta["label"],
+                            min_value=meta["type"](meta["min"]),
+                            max_value=meta["type"](meta["max"]),
+                            value=meta["type"](st.session_state[f"num_{feat}"]),
+                            step=meta["type"](meta["step"]) if meta["type"] == float else meta["step"],
+                            key=f"num_{feat}",
+                            on_change=sync_from_num,
+                            args=(feat,),
+                            label_visibility="collapsed",
+                        )
+                    input_values[feat] = st.session_state[f"input_{feat}"]
 
     st.markdown("")
 
