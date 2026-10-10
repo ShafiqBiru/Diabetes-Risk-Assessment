@@ -9,6 +9,9 @@ Design: Apple Health UI Design System (iOS/macOS Human Interface Guidelines)
 Layout: Balanced Dual-Column Desktop Architecture with Zero Vertical Scrolling
 Icons: Apple Minimalist Vector SVG Line Icons (No Unicode Emojis)
 Report: Clinical Single-Page PDF Generation via ReportLab
+Performance: Zero-Latency Real-Time Client-Side Dual-Input Synchronization & Stepper Buffer
+Geometry: Capsule Pill Slider Track with Seamless Rounded Fill Under Translucent Thumb
+Inference: Dual-Model Routing & Dataset Median Imputation for Optional Advanced Biomarkers
 """
 
 import os
@@ -53,63 +56,87 @@ warnings.filterwarnings("ignore")
 # ─────────────────────────────────────────────
 #  CONFIGURATION & FEATURE METADATA
 # ─────────────────────────────────────────────
-DATA_PATH  = os.path.join(os.path.dirname(__file__), "diabetes.csv")
-MODEL_PATH = os.path.join(os.path.dirname(__file__), "Diabetesmodel.pkl")
+DATA_PATH    = os.path.join(os.path.dirname(__file__), "diabetes.csv")
+MODEL_PATH_8 = os.path.join(os.path.dirname(__file__), "Diabetesmodel.pkl")
+MODEL_PATH_4 = os.path.join(os.path.dirname(__file__), "Diabetesmodel_4.pkl")
 
+# Standard training feature vector order (Pima Indians dataset)
 ALL_FEATURES = [
     "Pregnancies", "Glucose", "BloodPressure", "SkinThickness",
     "Insulin", "BMI", "DiabetesPedigreeFunction", "Age",
 ]
+PRIMARY_FEATURES  = ["Glucose", "BloodPressure", "BMI", "Age"]
+ADVANCED_FEATURES = ["Insulin", "SkinThickness", "Pregnancies", "DiabetesPedigreeFunction"]
 TARGET = "Outcome"
+
+# Precomputed training population medians (biologically clean medians from diabetes.csv)
+POPULATION_MEDIANS = {
+    "Insulin": 125.0,
+    "SkinThickness": 29.0,
+    "Pregnancies": 0,
+    "DiabetesPedigreeFunction": 0.3725,
+}
 
 FEATURE_META = {
     "Glucose": {
         "label": "Fasting Blood Glucose",
         "min": 0, "max": 300, "default": 120, "step": 1,
         "unit": "mg/dL", "type": int, "primary": True,
-        "icon": "droplet", "badge": "icon-badge-rose"
+        "icon": "droplet", "badge": "icon-badge-rose",
+        "norm_desc": "Normal Target: 70–99 mg/dL",
     },
     "BloodPressure": {
         "label": "Blood Pressure (Diastolic)",
         "min": 0, "max": 200, "default": 70, "step": 1,
         "unit": "mm Hg", "type": int, "primary": True,
-        "icon": "heart_pulse", "badge": "icon-badge-crimson"
+        "icon": "heart_pulse", "badge": "icon-badge-crimson",
+        "norm_desc": "Normal Target: < 80 mm Hg",
     },
     "BMI": {
         "label": "Body Mass Index (BMI)",
         "min": 10.0, "max": 60.0, "default": 25.0, "step": 0.1,
         "unit": "kg/m²", "type": float, "primary": True,
-        "icon": "scale", "badge": "icon-badge-blue"
+        "icon": "scale", "badge": "icon-badge-blue",
+        "norm_desc": "Healthy Target: 18.5–24.9 kg/m²",
     },
     "Age": {
         "label": "Patient Age",
         "min": 1, "max": 120, "default": 30, "step": 1,
         "unit": "years", "type": int, "primary": True,
-        "icon": "calendar", "badge": "icon-badge-amber"
+        "icon": "calendar", "badge": "icon-badge-amber",
+        "norm_desc": "Standard Baseline: 18–44 yrs",
     },
     "Insulin": {
         "label": "2-Hour Serum Insulin",
         "min": 0, "max": 900, "default": 80, "step": 1,
         "unit": "µU/mL", "type": int, "primary": False,
-        "icon": "syringe", "badge": "icon-badge-teal"
+        "icon": "syringe", "badge": "icon-badge-teal",
+        "norm_desc": "Reference Target: 16–166 µU/mL",
+        "skip_label": "Skip / Lab test not performed",
     },
     "SkinThickness": {
         "label": "Triceps Skin Fold Thickness",
         "min": 0, "max": 100, "default": 20, "step": 1,
         "unit": "mm", "type": int, "primary": False,
-        "icon": "layers", "badge": "icon-badge-amber"
+        "icon": "layers", "badge": "icon-badge-amber",
+        "norm_desc": "Reference Target: 10–30 mm",
+        "skip_label": "Skip / Caliper test not performed",
     },
     "Pregnancies": {
         "label": "Number of Pregnancies",
         "min": 0, "max": 20, "default": 1, "step": 1,
         "unit": "count", "type": int, "primary": False,
-        "icon": "user", "badge": "icon-badge-purple"
+        "icon": "user", "badge": "icon-badge-purple",
+        "norm_desc": "Obstetric Baseline: 0–2",
+        "skip_label": "Skip / Not applicable (male or non-parous patient)",
     },
     "DiabetesPedigreeFunction": {
         "label": "Diabetes Pedigree Function",
         "min": 0.0, "max": 2.5, "default": 0.47, "step": 0.01,
         "unit": "score", "type": float, "primary": False,
-        "icon": "dna", "badge": "icon-badge-purple"
+        "icon": "dna", "badge": "icon-badge-purple",
+        "norm_desc": "Low Hereditary Risk: < 0.50",
+        "skip_label": "Skip / Family pedigree history unknown",
     },
 }
 
@@ -119,17 +146,17 @@ PRESETS = {
         "Pregnancies": 1, "Glucose": 88, "BloodPressure": 68, "SkinThickness": 22,
         "Insulin": 45, "BMI": 22.5, "DiabetesPedigreeFunction": 0.25, "Age": 28,
     },
-    "Borderline / Pre-diabetic": {
-        "Pregnancies": 2, "Glucose": 115, "BloodPressure": 78, "SkinThickness": 29,
-        "Insulin": 125, "BMI": 29.5, "DiabetesPedigreeFunction": 0.45, "Age": 42,
+    "Borderline Risk Profile": {
+        "Pregnancies": 3, "Glucose": 118, "BloodPressure": 78, "SkinThickness": 28,
+        "Insulin": 130, "BMI": 27.8, "DiabetesPedigreeFunction": 0.45, "Age": 42,
     },
-    "High-Risk Profile": {
-        "Pregnancies": 5, "Glucose": 175, "BloodPressure": 88, "SkinThickness": 38,
-        "Insulin": 220, "BMI": 38.2, "DiabetesPedigreeFunction": 1.20, "Age": 55,
+    "Elevated Risk Profile": {
+        "Pregnancies": 6, "Glucose": 168, "BloodPressure": 88, "SkinThickness": 38,
+        "Insulin": 240, "BMI": 36.2, "DiabetesPedigreeFunction": 0.88, "Age": 54,
     },
-    "Notebook Sample (Glucose=137)": {
-        "Pregnancies": 3, "Glucose": 137, "BloodPressure": 72, "SkinThickness": 30,
-        "Insulin": 138, "BMI": 43.0, "DiabetesPedigreeFunction": 0.50, "Age": 33,
+    "Clinical Obesity & Hypertension Profile": {
+        "Pregnancies": 2, "Glucose": 142, "BloodPressure": 96, "SkinThickness": 42,
+        "Insulin": 195, "BMI": 41.5, "DiabetesPedigreeFunction": 0.62, "Age": 49,
     },
 }
 
@@ -137,33 +164,33 @@ PRESETS = {
 #  VECTOR SVG ICONS (Apple Minimalist Line Style)
 # ─────────────────────────────────────────────
 SVG_ICONS = {
-    "droplet": '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#FF2D55" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>',
-    "heart_pulse": '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#FF3B30" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/><path d="M3.22 12H9.5l.5-1 2 4.5 2-7 1.5 3.5h4.28"/></svg>',
-    "scale": '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#007AFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="M7 21h10"/><path d="M12 3v18"/><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/></svg>',
-    "calendar": '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#FF9500" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>',
-    "syringe": '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#30B0C7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 2 4 4"/><path d="m17 7 3-3"/><path d="M19 9 8.7 19.3c-1 1-2.5 1-3.4 0l-.6-.6c-1-1-1-2.5 0-3.4L15 5"/><path d="m9 11 4 4"/><path d="m5 19-3 3"/><path d="m14 4 6 6"/></svg>',
-    "layers": '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#FF9500" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>',
-    "user": '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#5856D6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
-    "dna": '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#AF52DE" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 15c6.667-6 13.333 0 20-6"/><path d="M9 22c1.798-1.998 2.518-3.995 2.807-5.993"/><path d="M15 2c-1.798 1.998-2.518 3.995-2.807 5.993"/><path d="m17 6-2.5-2.5"/><path d="m14 8-1-1"/><path d="m7 18 2.5 2.5"/><path d="m3.5 14.5.5.5"/><path d="m20 9 .5.5"/><path d="m6.5 12.5 1 1"/><path d="m16.5 10.5 1 1"/><path d="m10 16 1 1"/></svg>',
-    "activity": '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#007AFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>',
-    "shield_check": '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#34C759" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>',
-    "alert_triangle": '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FF3B30" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
-    "alert_circle": '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FF9500" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>',
-    "file_text": '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#007AFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg>',
-    "info": '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#007AFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>',
-    "check": '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#34C759" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',
+    "activity": '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#007AFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>',
+    "droplet": '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FF2D55" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path></svg>',
+    "heart_pulse": '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FF3B30" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path><path d="M3.22 12H9.5l.5-1 2 4.5 2-7 1.5 3.5h5.27"></path></svg>',
+    "scale": '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#007AFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"></path><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"></path><path d="M7 21h10"></path><path d="M12 3v18"></path><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"></path></svg>',
+    "calendar": '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FF9500" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"></rect><line x1="16" x2="16" y1="2" y2="6"></line><line x1="8" x2="8" y1="2" y2="6"></line><line x1="3" x2="21" y1="10" y2="10"></line></svg>',
+    "syringe": '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#30B0C7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 2 4 4"></path><path d="m17 7 3-3"></path><path d="M19 9 8.7 19.3c-1 1-2.5 1-3.4 0l-.6-.6c-1-1-1-2.5 0-3.4L15 5"></path><path d="m9 11 4 4"></path><path d="m5 19-3 3"></path><path d="m14 4 6 6"></path></svg>',
+    "layers": '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FF9500" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>',
+    "user": '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#AF52DE" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>',
+    "dna": '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#AF52DE" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m8 16 1.5-1.5"></path><path d="m14.5 9.5 1.5-1.5"></path><path d="m17 6-2.5-2.5"></path><path d="m9.5 14.5-2.5-2.5"></path><path d="m20 9-4.5 4.5"></path><path d="m8.5 19.5-4.5-4.5"></path><path d="m14 4-9.5 9.5a5 5 0 0 0 7 7l9.5-9.5a5 5 0 0 0-7-7Z"></path></svg>',
+    "check": '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#34C759" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>',
+    "shield_check": '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#34C759" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><path d="m9 12 2 2 4-4"></path></svg>',
+    "alert_triangle": '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FF3B30" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>',
+    "alert_circle": '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FF9500" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>',
+    "info": '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#007AFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>',
+    "flask": '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#007AFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2v7.31L4.1 19.34A2 2 0 0 0 5.8 22h12.4a2 2 0 0 0 1.7-2.66L14 9.31V2"></path><line x1="8.5" y1="2" x2="15.5" y2="2"></line><line x1="14" y1="14" x2="10" y2="14"></line></svg>',
 }
 
-def render_badge(icon_name, badge_class="icon-badge-blue"):
-    svg_str = SVG_ICONS.get(icon_name, "")
-    return f'<div class="icon-badge {badge_class}">{svg_str}</div>'
+def render_badge(icon_name, badge_class):
+    svg = SVG_ICONS.get(icon_name, SVG_ICONS["activity"])
+    return f'<div class="icon-badge {badge_class}">{svg}</div>'
 
 # ─────────────────────────────────────────────
 #  PAGE CONFIG
 # ─────────────────────────────────────────────
 st.set_page_config(
     page_title="AI Diabetes Risk Assessment",
-    page_icon="https://raw.githubusercontent.com/feathericons/feather/master/icons/activity.svg",
+    page_icon="🩺",
     layout="wide",
     initial_sidebar_state="collapsed",
 )
@@ -173,116 +200,86 @@ st.set_page_config(
 # ─────────────────────────────────────────────
 st.markdown("""
 <style>
-/* ── Apple System Font Stack ────────────────────────────── */
-@import url('https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap');
-
-html, body, [class*="css"], .stApp {
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", "Inter", sans-serif !important;
+/* ── Typography & Apple System Font Stack ────────────────── */
+html, body, [class*="css"], [class*="st-"] {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text",
+                 "Helvetica Neue", Roboto, sans-serif !important;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    background-color: #F2F2F7 !important;
-    color: #1C1C1E !important;
-}
-
-/* ── Fixed Ambient Color Orbs for High Optical Transparency Refraction ── */
-.ambient-orb-blue {
-    position: fixed;
-    top: 4%;
-    left: 5%;
-    width: 580px;
-    height: 580px;
-    background: radial-gradient(circle, rgba(0, 122, 255, 0.25) 0%, rgba(88, 86, 214, 0.14) 45%, transparent 70%);
-    filter: blur(90px);
-    -webkit-filter: blur(90px);
-    border-radius: 50%;
-    z-index: 0;
-    pointer-events: none;
-    transform: translateZ(0);
-}
-
-.ambient-orb-cyan {
-    position: fixed;
-    bottom: 5%;
-    right: 5%;
-    width: 620px;
-    height: 620px;
-    background: radial-gradient(circle, rgba(50, 199, 235, 0.28) 0%, rgba(52, 199, 89, 0.14) 50%, transparent 70%);
-    filter: blur(95px);
-    -webkit-filter: blur(95px);
-    border-radius: 50%;
-    z-index: 0;
-    pointer-events: none;
-    transform: translateZ(0);
-}
-
-/* ── Container Layout: Wide viewport for side-by-side zero scroll ── */
-.block-container {
-    position: relative !important;
-    z-index: 1 !important;
-    padding-top: 1.2rem !important;
-    padding-bottom: 3.5rem !important;
-    max-width: 1320px !important;
-}
-
-/* ── Clean Headers ──────────────────────────────────────── */
-#MainMenu { visibility: hidden; }
-footer { visibility: hidden; }
-header[data-testid="stHeader"] {
-    background: rgba(242, 242, 247, 0.45) !important;
-    backdrop-filter: blur(28px) saturate(210%) !important;
-    -webkit-backdrop-filter: blur(28px) saturate(210%) !important;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.6) !important;
-}
-
-/* ── Global Typography & Contrast ───────────────────────── */
-h1, h2, h3, h4, h5, h6 {
-    color: #1C1C1E !important;
-    font-weight: 700 !important;
-    letter-spacing: -0.02em !important;
-}
-p, span, label, div {
     color: #1C1C1E;
 }
-.stMarkdown p {
-    color: #1C1C1E !important;
-    line-height: 1.45;
+
+/* ── App Canvas Background & Refraction Orbs ─────────────── */
+.stApp {
+    background-color: #F2F2F7 !important;
+    background-attachment: fixed;
+}
+.ambient-orb-blue {
+    position: fixed;
+    top: 3%;
+    left: 8%;
+    width: 480px;
+    height: 480px;
+    background: radial-gradient(circle, rgba(0, 122, 255, 0.16) 0%, rgba(0, 122, 255, 0) 70%);
+    filter: blur(60px);
+    z-index: 0;
+    pointer-events: none;
+    animation: orbFloat1 18s ease-in-out infinite alternate;
+}
+.ambient-orb-cyan {
+    position: fixed;
+    bottom: 8%;
+    right: 6%;
+    width: 520px;
+    height: 520px;
+    background: radial-gradient(circle, rgba(48, 176, 199, 0.15) 0%, rgba(48, 176, 199, 0) 70%);
+    filter: blur(70px);
+    z-index: 0;
+    pointer-events: none;
+    animation: orbFloat2 22s ease-in-out infinite alternate;
+}
+@keyframes orbFloat1 {
+    0%   { transform: translate(0, 0) scale(1); }
+    100% { transform: translate(50px, 40px) scale(1.08); }
+}
+@keyframes orbFloat2 {
+    0%   { transform: translate(0, 0) scale(1); }
+    100% { transform: translate(-45px, -35px) scale(0.95); }
 }
 
-/* ── Hero Banner ────────────────────────────────────────── */
+/* ── Layout Tuning: Zero Vertical Scroll Desktop Balance ─── */
+.block-container {
+    padding-top: 1.0rem !important;
+    padding-bottom: 2.0rem !important;
+    padding-left: 1.75rem !important;
+    padding-right: 1.75rem !important;
+    max-width: 1440px !important;
+    position: relative;
+    z-index: 1;
+}
+
+/* ── Hero Telemetry Banner ──────────────────────────────── */
 .hero-banner {
     background: linear-gradient(135deg, #007AFF 0%, #5856D6 55%, #AF52DE 100%);
     border-radius: 20px;
-    padding: 1.6rem 2.2rem;
-    margin-bottom: 1.2rem;
+    padding: 1.25rem 1.75rem;
     color: #FFFFFF !important;
-    box-shadow: 0 10px 32px rgba(0, 122, 255, 0.22);
+    box-shadow: 0 10px 28px rgba(0, 122, 255, 0.22);
+    margin-bottom: 0.85rem;
     position: relative;
     overflow: hidden;
-    border: 1px solid rgba(255, 255, 255, 0.45);
-    border-top: 1px solid rgba(255, 255, 255, 0.85);
-}
-.hero-banner::after {
-    content: '';
-    position: absolute;
-    top: -60%;
-    right: -20%;
-    width: 480px;
-    height: 480px;
-    background: radial-gradient(circle, rgba(255,255,255,0.14) 0%, transparent 70%);
-    border-radius: 50%;
-    pointer-events: none;
 }
 .hero-banner h1 {
     font-size: 1.85rem !important;
     font-weight: 800 !important;
-    letter-spacing: -0.03em !important;
-    margin: 0 0 0.3rem 0 !important;
+    letter-spacing: -0.025em;
+    margin-bottom: 0.25rem !important;
     color: #FFFFFF !important;
 }
 .hero-banner p {
-    font-size: 0.96rem !important;
+    font-size: 0.94rem !important;
     opacity: 0.95;
-    max-width: 720px;
+    max-width: 760px;
     line-height: 1.45;
     margin: 0 !important;
     color: #FFFFFF !important;
@@ -294,12 +291,12 @@ p, span, label, div {
     background: rgba(255, 255, 255, 0.2);
     border: 1px solid rgba(255, 255, 255, 0.4);
     border-radius: 999px;
-    padding: 0.22rem 0.8rem;
+    padding: 0.20rem 0.75rem;
     font-size: 0.70rem;
     font-weight: 700;
     letter-spacing: 0.6px;
     color: #FFFFFF !important;
-    margin-bottom: 0.6rem;
+    margin-bottom: 0.45rem;
     text-transform: uppercase;
 }
 
@@ -310,34 +307,34 @@ p, span, label, div {
     color: #8E8E93 !important;
     text-transform: uppercase !important;
     letter-spacing: 0.8px !important;
-    margin-top: 0.2rem !important;
-    margin-bottom: 0.5rem !important;
+    margin-top: 0.15rem !important;
+    margin-bottom: 0.45rem !important;
     padding-left: 2px !important;
 }
 
 /* ── True Apple Liquid Glass Container ──────────────────── */
 .apple-glass-card {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.38) 0%, rgba(255, 255, 255, 0.22) 100%) !important;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.42) 0%, rgba(255, 255, 255, 0.26) 100%) !important;
     backdrop-filter: blur(28px) saturate(210%) !important;
     -webkit-backdrop-filter: blur(28px) saturate(210%) !important;
     border-radius: 20px !important;
-    border: 1px solid rgba(255, 255, 255, 0.45) !important;
-    border-top: 1px solid rgba(255, 255, 255, 0.75) !important;
-    box-shadow: 0 10px 32px 0 rgba(0, 0, 0, 0.06), inset 0 1px 1px 0 rgba(255, 255, 255, 0.7) !important;
-    padding: 1.25rem 1.45rem !important;
-    margin-bottom: 0.9rem !important;
+    border: 1px solid rgba(255, 255, 255, 0.50) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.85) !important;
+    box-shadow: 0 10px 32px 0 rgba(0, 0, 0, 0.05), inset 0 1px 1px 0 rgba(255, 255, 255, 0.8) !important;
+    padding: 1.15rem 1.35rem !important;
+    margin-bottom: 0.85rem !important;
 }
 
 div[data-testid="stVerticalBlockBorderWrapper"] {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.38) 0%, rgba(255, 255, 255, 0.22) 100%) !important;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.40) 0%, rgba(255, 255, 255, 0.24) 100%) !important;
     backdrop-filter: blur(28px) saturate(210%) !important;
     -webkit-backdrop-filter: blur(28px) saturate(210%) !important;
     border-radius: 20px !important;
-    border: 1px solid rgba(255, 255, 255, 0.45) !important;
-    border-top: 1px solid rgba(255, 255, 255, 0.75) !important;
-    box-shadow: 0 10px 32px 0 rgba(0, 0, 0, 0.06), inset 0 1px 1px 0 rgba(255, 255, 255, 0.7) !important;
-    padding: 1.2rem 1.4rem !important;
-    margin-bottom: 0.9rem !important;
+    border: 1px solid rgba(255, 255, 255, 0.50) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.85) !important;
+    box-shadow: 0 10px 32px 0 rgba(0, 0, 0, 0.05), inset 0 1px 1px 0 rgba(255, 255, 255, 0.8) !important;
+    padding: 1.15rem 1.35rem !important;
+    margin-bottom: 0.85rem !important;
 }
 
 /* ── Frosted Circular Icon Badges ───────────────────────── */
@@ -364,7 +361,7 @@ div[data-testid="stVerticalBlockBorderWrapper"] {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 0.15rem;
+    margin-bottom: 0.12rem;
     padding-left: 2px;
     padding-right: 2px;
 }
@@ -375,7 +372,7 @@ div[data-testid="stVerticalBlockBorderWrapper"] {
 }
 .metric-row-title {
     font-weight: 700;
-    font-size: 0.90rem;
+    font-size: 0.89rem;
     color: #1C1C1E;
     letter-spacing: -0.01em;
 }
@@ -387,10 +384,11 @@ div[data-testid="stVerticalBlockBorderWrapper"] {
 }
 
 /* ══════════════════════════════════════════════════════════
-   1. PIXEL-PERFECT SLIDER STYLING (MATCHING REFERENCE IMAGE)
+   1 & 2. SLIDER TRACK GEOMETRY: SEAMLESS CAPSULE & PILL ROUNDING
+   Eliminates all sharp 90-degree internal edges under translucent thumb
    ══════════════════════════════════════════════════════════ */
 div[data-testid="stSlider"] {
-    padding-top: 4px !important;
+    padding-top: 3px !important;
     padding-bottom: 2px !important;
 }
 div[data-testid="stSlider"] div[data-baseweb="slider"] {
@@ -401,37 +399,43 @@ div[data-testid="stSlider"] div[data-baseweb="slider"] {
 div[data-testid="stSlider"] div[data-rac][data-orientation="horizontal"] {
     display: block !important;
     width: 100% !important;
-    height: 40px !important;
+    height: 38px !important;
     position: relative !important;
 }
 
-/* Track: Sleek 6px capsule with vivid Apple Blue and neutral gray */
+/* Main Track Container: Perfect 6px capsule with complete clipping */
+div[data-testid="stSlider"] div[class*="efbyxod5"],
+div[data-testid="stSlider"] div[data-rac] > div[class*="efbyxod5"],
 div[data-testid="stSlider"] div[data-baseweb="slider"] > div {
     height: 6px !important;
     border-radius: 9999px !important;
-    background-color: #D1D1D6 !important;
-}
-div[data-testid="stSlider"] div[data-baseweb="slider"] > div > div:first-child {
-    height: 6px !important;
-    border-radius: 9999px !important;
-    background-color: #007AFF !important;
-}
-div[data-testid="stSlider"] div[class*="efbyxod5"],
-div[data-testid="stSlider"] div[data-rac] > div[class*="efbyxod5"] {
-    height: 6px !important;
-    border-radius: 9999px !important;
+    background-color: #E5E5EA !important;
+    background-image: none !important;
+    overflow: hidden !important; /* Clips all fills inside smooth capsule */
+    position: relative !important;
     top: calc(50% - 3px) !important;
     width: 100% !important;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05) !important;
 }
 
-/* BaseWeb Track Progress: Vivid Apple Blue */
-div[data-testid="stSlider"] div[data-baseweb="slider"] > div > div:first-child {
-    height: 6px !important;
+/* Active colored progress fill: Seamless rounded capsule end */
+div[data-testid="stSlider"] div[class*="efbyxod5"]::before {
+    content: "" !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    bottom: 0 !important;
+    width: var(--slider-fill, 50%) !important;
+    background: #007AFF !important;
     border-radius: 9999px !important;
-    background-color: #007AFF !important;
+    border-top-right-radius: 9999px !important;
+    border-bottom-right-radius: 9999px !important;
+    box-shadow: 0 0 6px rgba(0, 122, 255, 0.35) !important;
+    pointer-events: none !important;
+    transition: width 0.03s linear !important;
 }
 
-/* Slider Thumb (Dragging Pill Capsule: 38px x 24px, 13px radius) */
+/* Slider Thumb (Translucent Liquid Glass Pill: 38px x 24px, 13px radius) */
 div[data-testid="stSlider"] div[role="slider"],
 div[data-testid="stSlider"] div[class*="efbyxod3"],
 div[data-testid="stSlider"] div[data-rac][style*="position: absolute"] {
@@ -449,39 +453,27 @@ div[data-testid="stSlider"] div[data-rac][style*="position: absolute"] {
     transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.15s ease !important;
 }
 
-/* Remove default inner BaseWeb circle */
-div[data-testid="stSlider"] div[role="slider"] > * {
-    display: none !important;
-}
-
 /* Hover: Subtle scale bump */
-div[data-testid="stSlider"] div[role="slider"]:hover {
-    transform: scale(1.05) !important;
-    cursor: grab !important;
-}
+div[data-testid="stSlider"] div[role="slider"]:hover,
 div[data-testid="stSlider"] div[class*="efbyxod3"]:hover,
 div[data-testid="stSlider"] div[data-rac][style*="position: absolute"]:hover {
     transform: translate(-50%, -50%) scale(1.05) !important;
     cursor: grab !important;
 }
 
-/* Active / Dragging: Smooth tactile expansion with blue aura */
+/* Active / Dragging: Tactile expansion with Apple blue aura */
 div[data-testid="stSlider"] div[role="slider"]:active,
-div[data-testid="stSlider"] div[role="slider"]:focus {
-    transform: scale(1.10) !important;
-    cursor: grabbing !important;
-    box-shadow: 0 4px 14px rgba(0, 122, 255, 0.25) !important;
-}
+div[data-testid="stSlider"] div[role="slider"]:focus,
 div[data-testid="stSlider"] div[class*="efbyxod3"]:active,
 div[data-testid="stSlider"] div[class*="efbyxod3"]:focus,
 div[data-testid="stSlider"] div[data-rac][style*="position: absolute"]:active,
 div[data-testid="stSlider"] div[data-rac][style*="position: absolute"]:focus {
     transform: translate(-50%, -50%) scale(1.10) !important;
     cursor: grabbing !important;
-    box-shadow: 0 4px 14px rgba(0, 122, 255, 0.25) !important;
+    box-shadow: 0 4px 14px rgba(0, 122, 255, 0.28) !important;
 }
 
-/* Hide floating tooltip value above thumb */
+/* Hide default tooltip over thumb to maintain clean appearance */
 div[data-testid="stThumbValue"],
 div[data-testid="stSliderThumbValue"] {
     display: none !important;
@@ -491,73 +483,8 @@ div[data-testid="stSliderTickBarMin"],
 div[data-testid="stSliderTickBarMax"],
 div[data-testid="stSliderTickBar"] p {
     color: #8E8E93 !important;
-    font-size: 0.74rem !important;
+    font-size: 0.73rem !important;
     font-weight: 500 !important;
-}
-
-/* Cross-Browser Native Range Rules (WebKit & Mozilla) */
-input[type="range"] {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 100%;
-    height: 6px;
-    border-radius: 9999px;
-    background: #D1D1D6;
-    outline: none;
-}
-input[type="range"]::-webkit-slider-runnable-track {
-    height: 6px;
-    border-radius: 9999px;
-    background: linear-gradient(to right, #007aff 0%, #007aff var(--progress, 50%), #d1d1d6 var(--progress, 50%), #d1d1d6 100%);
-}
-input[type="range"]::-moz-range-track {
-    height: 6px;
-    border-radius: 9999px;
-    background: linear-gradient(to right, #007aff 0%, #007aff var(--progress, 50%), #d1d1d6 var(--progress, 50%), #d1d1d6 100%);
-}
-input[type="range"]::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 38px;
-    height: 24px;
-    border-radius: 13px;
-    background: rgba(235, 235, 240, 0.70);
-    backdrop-filter: blur(16px) saturate(180%);
-    -webkit-backdrop-filter: blur(16px) saturate(180%);
-    border: 1.5px solid rgba(255, 255, 255, 0.95);
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
-    cursor: grab;
-    margin-top: -9px;
-    transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.15s ease;
-}
-input[type="range"]::-webkit-slider-thumb:hover {
-    transform: scale(1.05);
-    cursor: grab;
-}
-input[type="range"]::-webkit-slider-thumb:active {
-    transform: scale(1.10);
-    cursor: grabbing;
-    box-shadow: 0 4px 14px rgba(0, 122, 255, 0.25);
-}
-input[type="range"]::-moz-range-thumb {
-    width: 38px;
-    height: 24px;
-    border-radius: 13px;
-    background: rgba(235, 235, 240, 0.70);
-    backdrop-filter: blur(16px) saturate(180%);
-    border: 1.5px solid rgba(255, 255, 255, 0.95);
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
-    cursor: grab;
-    transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.15s ease;
-}
-input[type="range"]::-moz-range-thumb:hover {
-    transform: scale(1.05);
-    cursor: grab;
-}
-input[type="range"]::-moz-range-thumb:active {
-    transform: scale(1.10);
-    cursor: grabbing;
-    box-shadow: 0 4px 14px rgba(0, 122, 255, 0.25);
 }
 
 /* ── Synchronized Number Input Box ──────────────────────── */
@@ -565,61 +492,95 @@ div[data-testid="stNumberInput"] {
     padding-top: 0px !important;
     margin-top: 0px !important;
 }
-div[data-testid="stNumberInput"] div[data-baseweb="input"] {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.38) 0%, rgba(255, 255, 255, 0.22) 100%) !important;
-    backdrop-filter: blur(28px) saturate(210%) !important;
-    -webkit-backdrop-filter: blur(28px) saturate(210%) !important;
+div[data-testid="stNumberInput"] div[data-baseweb="input"],
+div[data-testid="stNumberInput"] div[class*="st-emotion-cache"] {
     border-radius: 12px !important;
-    border: 1px solid rgba(255, 255, 255, 0.45) !important;
-    border-top: 1px solid rgba(255, 255, 255, 0.75) !important;
-    box-shadow: 0 4px 14px 0 rgba(0, 0, 0, 0.04), inset 0 1px 1px 0 rgba(255, 255, 255, 0.7) !important;
-    transition: all 0.2s ease !important;
-    height: 40px !important;
-}
-div[data-testid="stNumberInput"] div[data-baseweb="input"]:focus-within {
-    border-color: #007AFF !important;
-    box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.22), inset 0 1px 1px 0 rgba(255, 255, 255, 0.9) !important;
 }
 div[data-testid="stNumberInput"] input {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.40) 0%, rgba(255, 255, 255, 0.22) 100%) !important;
+    backdrop-filter: blur(24px) saturate(200%) !important;
+    -webkit-backdrop-filter: blur(24px) saturate(200%) !important;
+    border-radius: 12px !important;
+    border: 1px solid rgba(255, 255, 255, 0.50) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.85) !important;
+    box-shadow: 0 3px 10px 0 rgba(0, 0, 0, 0.03), inset 0 1px 1px 0 rgba(255, 255, 255, 0.7) !important;
     font-weight: 700 !important;
-    font-size: 0.94rem !important;
+    font-size: 0.93rem !important;
     color: #1C1C1E !important;
     text-align: center !important;
     font-variant-numeric: tabular-nums !important;
+    height: 38px !important;
+    transition: all 0.2s ease !important;
+}
+div[data-testid="stNumberInput"] input:focus {
+    border-color: #007AFF !important;
+    box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.22), inset 0 1px 1px 0 rgba(255, 255, 255, 0.9) !important;
 }
 div[data-testid="stNumberInput"] button {
     background: transparent !important;
     border: none !important;
     color: #8E8E93 !important;
-    transition: color 0.15s ease !important;
+    transition: color 0.15s ease, transform 0.1s ease !important;
 }
 div[data-testid="stNumberInput"] button:hover {
     color: #007AFF !important;
+    transform: scale(1.15) !important;
+}
+div[data-testid="stNumberInput"] button:active {
+    transform: scale(0.95) !important;
 }
 
-/* ══════════════════════════════════════════════════════════
-   2. CLINICAL REFERENCE RANGE CARDS (PARALLEL BENCHMARKS)
-   ══════════════════════════════════════════════════════════ */
+/* ── Transparency Disclosure Pill ───────────────────────── */
+.transparency-pill {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(135deg, rgba(0, 122, 255, 0.08) 0%, rgba(0, 122, 255, 0.03) 100%);
+    border: 1px solid rgba(0, 122, 255, 0.25);
+    border-radius: 12px;
+    padding: 0.45rem 0.85rem;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #007AFF;
+    margin-bottom: 0.75rem;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+}
+
+/* ── Baseline Imputation Status Tag ─────────────────────── */
+.imputation-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(142, 142, 147, 0.12);
+    border: 1px solid rgba(142, 142, 147, 0.25);
+    border-radius: 6px;
+    padding: 0.15rem 0.50rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #636366;
+}
+
+/* ── Reference Benchmark Metric Cards ───────────────────── */
 .ref-card-row {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.38) 0%, rgba(255, 255, 255, 0.22) 100%) !important;
-    backdrop-filter: blur(28px) saturate(210%) !important;
-    -webkit-backdrop-filter: blur(28px) saturate(210%) !important;
-    border-radius: 16px !important;
-    border: 1px solid rgba(255, 255, 255, 0.45) !important;
-    border-top: 1px solid rgba(255, 255, 255, 0.75) !important;
-    box-shadow: 0 8px 24px 0 rgba(0, 0, 0, 0.05), inset 0 1px 1px 0 rgba(255, 255, 255, 0.7) !important;
-    padding: 0.90rem 1.1rem !important;
-    margin-bottom: 0.78rem !important;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-    min-height: 76px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.42) 0%, rgba(255, 255, 255, 0.22) 100%);
+    backdrop-filter: blur(28px) saturate(210%);
+    -webkit-backdrop-filter: blur(28px) saturate(210%);
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.45);
+    border-top: 1px solid rgba(255, 255, 255, 0.80);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04), inset 0 1px 1px rgba(255, 255, 255, 0.7);
+    padding: 0.60rem 0.90rem;
+    margin-bottom: 0.40rem;
+    min-height: 54px;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 .ref-card-row:hover {
-    box-shadow: 0 12px 32px 0 rgba(0, 0, 0, 0.08), inset 0 1px 1px rgba(255, 255, 255, 0.9) !important;
     transform: translateY(-1px);
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.45) 0%, rgba(255, 255, 255, 0.28) 100%) !important;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
 }
 .ref-meta-left {
     display: flex;
@@ -627,225 +588,181 @@ div[data-testid="stNumberInput"] button:hover {
     gap: 10px;
 }
 .ref-metric-name {
-    font-size: 0.88rem !important;
-    font-weight: 700 !important;
-    color: #1C1C1E !important;
+    font-size: 0.84rem;
+    font-weight: 700;
+    color: #1C1C1E;
     line-height: 1.2;
 }
 .ref-metric-unit {
-    font-size: 0.70rem !important;
-    color: #8E8E93 !important;
+    font-size: 0.72rem;
+    color: #8E8E93;
     font-weight: 500;
 }
 .ref-badges-right {
     display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 4px;
+    gap: 6px;
+    align-items: center;
 }
 .range-badge {
-    display: inline-block;
-    padding: 0.20rem 0.65rem;
-    border-radius: 999px;
-    font-size: 0.70rem !important;
-    font-weight: 700 !important;
-    letter-spacing: 0.2px;
+    display: inline-flex;
+    align-items: center;
+    padding: 0.20rem 0.55rem;
+    border-radius: 8px;
+    font-size: 0.70rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
 }
 .badge-normal {
-    background: rgba(52, 199, 89, 0.16) !important;
-    color: #248A3D !important;
+    background: rgba(52, 199, 89, 0.14);
+    color: #248A3D;
+    border: 1px solid rgba(52, 199, 89, 0.35);
 }
 .badge-danger {
-    background: rgba(255, 59, 48, 0.16) !important;
-    color: #D70015 !important;
+    background: rgba(255, 59, 48, 0.14);
+    color: #D70015;
+    border: 1px solid rgba(255, 59, 48, 0.35);
 }
 
 /* ── Primary Action Button ──────────────────────────────── */
-.stButton > button[kind="primary"] {
-    background: #007AFF !important;
+div[data-testid="stButton"] > button {
+    background: linear-gradient(135deg, #007AFF 0%, #0056B3 100%) !important;
     color: #FFFFFF !important;
-    border: none !important;
-    border-radius: 999px !important;
-    font-weight: 700 !important;
-    font-size: 1.02rem !important;
-    padding: 0.75rem 2rem !important;
-    letter-spacing: -0.01em !important;
-    transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1) !important;
-    box-shadow: 0 6px 18px rgba(0, 122, 255, 0.32) !important;
-}
-.stButton > button[kind="primary"]:hover {
-    background: #0066DD !important;
-    box-shadow: 0 8px 24px rgba(0, 122, 255, 0.42) !important;
-    transform: translateY(-1px) !important;
-}
-.stButton > button[kind="primary"]:active {
-    transform: scale(0.98) !important;
-    box-shadow: 0 2px 6px rgba(0, 122, 255, 0.2) !important;
-}
-
-/* Secondary Action Button (PDF Download) */
-.stDownloadButton > button {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.45) 0%, rgba(255, 255, 255, 0.25) 100%) !important;
-    backdrop-filter: blur(28px) saturate(210%) !important;
-    -webkit-backdrop-filter: blur(28px) saturate(210%) !important;
-    border: 1px solid rgba(0, 122, 255, 0.35) !important;
-    border-top: 1px solid rgba(255, 255, 255, 0.85) !important;
-    color: #007AFF !important;
-    border-radius: 999px !important;
     font-weight: 700 !important;
     font-size: 0.95rem !important;
-    padding: 0.65rem 1.6rem !important;
-    box-shadow: 0 4px 14px rgba(0, 122, 255, 0.12) !important;
-    transition: all 0.18s ease !important;
+    border-radius: 14px !important;
+    border: none !important;
+    padding: 0.65rem 1.4rem !important;
+    box-shadow: 0 4px 16px rgba(0, 122, 255, 0.35) !important;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
-.stDownloadButton > button:hover {
-    background: #007AFF !important;
-    color: #FFFFFF !important;
-    border-color: #007AFF !important;
-    box-shadow: 0 6px 20px rgba(0, 122, 255, 0.35) !important;
-    transform: translateY(-1px) !important;
+div[data-testid="stButton"] > button:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 8px 24px rgba(0, 122, 255, 0.45) !important;
+    background: linear-gradient(135deg, #0A84FF 0%, #0062D2 100%) !important;
+}
+div[data-testid="stButton"] > button:active {
+    transform: translateY(0px) !important;
 }
 
-/* ── Risk Result Glass Panels ───────────────────────────── */
+/* ── PDF Download Button ────────────────────────────────── */
+div[data-testid="stDownloadButton"] > button {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.65) 0%, rgba(255, 255, 255, 0.40) 100%) !important;
+    color: #007AFF !important;
+    font-weight: 700 !important;
+    font-size: 0.90rem !important;
+    border-radius: 14px !important;
+    border: 1.5px solid rgba(0, 122, 255, 0.4) !important;
+    padding: 0.65rem 1.4rem !important;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05) !important;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+div[data-testid="stDownloadButton"] > button:hover {
+    background: linear-gradient(135deg, #007AFF 0%, #0056B3 100%) !important;
+    color: #FFFFFF !important;
+    border-color: transparent !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 8px 24px rgba(0, 122, 255, 0.35) !important;
+}
+
+/* ── Risk Cards ─────────────────────────────────────────── */
 .risk-card {
-    border-radius: 20px !important;
-    padding: 1.5rem 1.6rem !important;
-    margin: 0.6rem 0 !important;
-    backdrop-filter: blur(28px) saturate(210%) !important;
-    -webkit-backdrop-filter: blur(28px) saturate(210%) !important;
-    border-top: 1px solid rgba(255, 255, 255, 0.75) !important;
-    box-shadow: 0 10px 32px 0 rgba(0, 0, 0, 0.06), inset 0 1px 1px 0 rgba(255, 255, 255, 0.7) !important;
-    transition: all 0.2s ease;
+    border-radius: 20px;
+    padding: 1.35rem 1.6rem;
+    box-shadow: 0 10px 32px 0 rgba(0, 0, 0, 0.06);
+    margin-bottom: 0.9rem;
+    backdrop-filter: blur(28px) saturate(210%);
+    -webkit-backdrop-filter: blur(28px) saturate(210%);
 }
 .risk-card-header {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
     margin-bottom: 0.5rem;
 }
-.risk-card h3 {
+.risk-card-header h3 {
     margin: 0 !important;
-    font-size: 1.35rem !important;
-    font-weight: 700 !important;
+    font-size: 1.25rem !important;
+    font-weight: 800 !important;
+    letter-spacing: -0.015em;
 }
-.risk-high {
-    background: linear-gradient(135deg, rgba(255, 238, 238, 0.40) 0%, rgba(255, 238, 238, 0.22) 100%) !important;
-    border: 1.5px solid rgba(255, 59, 48, 0.35) !important;
-}
-.risk-high h3 { color: #D70015 !important; }
 .risk-low {
-    background: linear-gradient(135deg, rgba(234, 252, 240, 0.40) 0%, rgba(234, 252, 240, 0.22) 100%) !important;
-    border: 1.5px solid rgba(52, 199, 89, 0.35) !important;
+    background: linear-gradient(135deg, rgba(224, 249, 231, 0.70) 0%, rgba(255, 255, 255, 0.45) 100%);
+    border: 1px solid rgba(52, 199, 89, 0.4);
+    border-top: 1px solid rgba(52, 199, 89, 0.7);
 }
 .risk-low h3 { color: #248A3D !important; }
+
 .risk-medium {
-    background: linear-gradient(135deg, rgba(255, 248, 230, 0.40) 0%, rgba(255, 248, 230, 0.22) 100%) !important;
-    border: 1.5px solid rgba(255, 149, 0, 0.35) !important;
+    background: linear-gradient(135deg, rgba(255, 243, 214, 0.70) 0%, rgba(255, 255, 255, 0.45) 100%);
+    border: 1px solid rgba(255, 149, 0, 0.4);
+    border-top: 1px solid rgba(255, 149, 0, 0.7);
 }
 .risk-medium h3 { color: #C93400 !important; }
 
+.risk-high {
+    background: linear-gradient(135deg, rgba(255, 229, 229, 0.70) 0%, rgba(255, 255, 255, 0.45) 100%);
+    border: 1px solid rgba(255, 59, 48, 0.4);
+    border-top: 1px solid rgba(255, 59, 48, 0.7);
+}
+.risk-high h3 { color: #D70015 !important; }
+
 /* ── Metric Summary Tiles ───────────────────────────────── */
 .metric-tile {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.38) 0%, rgba(255, 255, 255, 0.22) 100%) !important;
-    backdrop-filter: blur(28px) saturate(210%) !important;
-    -webkit-backdrop-filter: blur(28px) saturate(210%) !important;
-    border-radius: 18px !important;
-    border: 1px solid rgba(255, 255, 255, 0.45) !important;
-    border-top: 1px solid rgba(255, 255, 255, 0.75) !important;
-    padding: 1.1rem 1.2rem !important;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.48) 0%, rgba(255, 255, 255, 0.28) 100%);
+    backdrop-filter: blur(28px) saturate(210%);
+    -webkit-backdrop-filter: blur(28px) saturate(210%);
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.50);
+    border-top: 1px solid rgba(255, 255, 255, 0.85);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04), inset 0 1px 1px rgba(255, 255, 255, 0.8);
+    padding: 0.95rem 1.15rem;
     text-align: center;
-    box-shadow: 0 10px 32px 0 rgba(0, 0, 0, 0.06), inset 0 1px 1px 0 rgba(255, 255, 255, 0.7) !important;
 }
 .metric-tile .value {
-    font-size: 1.9rem !important;
-    font-weight: 800 !important;
-    font-variant-numeric: tabular-nums;
+    font-size: 1.65rem;
+    font-weight: 800;
     letter-spacing: -0.02em;
 }
 .metric-tile .label {
-    font-size: 0.76rem !important;
-    color: #8E8E93 !important;
-    margin-top: 0.25rem;
-    font-weight: 600 !important;
+    font-size: 0.73rem;
+    font-weight: 700;
+    color: #8E8E93;
     text-transform: uppercase;
-    letter-spacing: 0.4px;
+    letter-spacing: 0.6px;
+    margin-top: 2px;
 }
 
-/* ── Regulatory Disclaimer Box ──────────────────────────── */
+/* ── Medical Disclaimer ─────────────────────────────────── */
 .disclaimer {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.38) 0%, rgba(255, 255, 255, 0.22) 100%) !important;
-    backdrop-filter: blur(28px) saturate(210%) !important;
-    -webkit-backdrop-filter: blur(28px) saturate(210%) !important;
-    border: 1px solid rgba(255, 255, 255, 0.45) !important;
-    border-left: 5px solid #007AFF !important;
-    border-top: 1px solid rgba(255, 255, 255, 0.75) !important;
-    border-radius: 18px !important;
-    padding: 1.1rem 1.4rem !important;
-    font-size: 0.86rem !important;
-    color: #3A3A3C !important;
-    line-height: 1.5;
-    margin-top: 1.2rem !important;
-    box-shadow: 0 10px 32px 0 rgba(0, 0, 0, 0.05), inset 0 1px 1px 0 rgba(255, 255, 255, 0.7) !important;
+    background: linear-gradient(135deg, rgba(242, 242, 247, 0.75) 0%, rgba(255, 255, 255, 0.55) 100%);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: 14px;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    border-left: 4px solid #007AFF;
+    padding: 0.85rem 1.15rem;
+    font-size: 0.78rem;
+    line-height: 1.45;
+    color: #636366;
+    margin-top: 1.25rem;
 }
 
-/* ── Expanders & Accordions ─────────────────────────────── */
-details {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.38) 0%, rgba(255, 255, 255, 0.22) 100%) !important;
+/* ── Expander Glass Styling ─────────────────────────────── */
+div[data-testid="stExpander"] {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.40) 0%, rgba(255, 255, 255, 0.22) 100%) !important;
     backdrop-filter: blur(28px) saturate(210%) !important;
     -webkit-backdrop-filter: blur(28px) saturate(210%) !important;
     border-radius: 18px !important;
     border: 1px solid rgba(255, 255, 255, 0.45) !important;
-    border-top: 1px solid rgba(255, 255, 255, 0.75) !important;
-    box-shadow: 0 10px 32px 0 rgba(0, 0, 0, 0.04), inset 0 1px 1px 0 rgba(255, 255, 255, 0.7) !important;
-    margin-top: 0.6rem !important;
-    margin-bottom: 0.8rem !important;
-    overflow: hidden;
+    border-top: 1px solid rgba(255, 255, 255, 0.80) !important;
+    box-shadow: 0 8px 24px 0 rgba(0, 0, 0, 0.04) !important;
+    margin-top: 0.65rem !important;
+    overflow: hidden !important;
 }
-summary {
-    font-weight: 600 !important;
+div[data-testid="stExpander"] details summary {
+    font-weight: 700 !important;
     color: #1C1C1E !important;
-    padding: 0.8rem 1.1rem !important;
-    cursor: pointer !important;
-}
-
-/* ── Developer Sidebar Drawer ───────────────────────────── */
-section[data-testid="stSidebar"] {
-    background-color: rgba(248, 248, 250, 0.55) !important;
-    backdrop-filter: blur(30px) saturate(220%) !important;
-    -webkit-backdrop-filter: blur(30px) saturate(220%) !important;
-    border-right: 1px solid rgba(255, 255, 255, 0.6) !important;
-    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.04) !important;
-}
-section[data-testid="stSidebar"] .block-container {
-    padding-top: 1.2rem !important;
-}
-
-div[data-testid="stMetric"] {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.38) 0%, rgba(255, 255, 255, 0.22) 100%) !important;
-    backdrop-filter: blur(28px) saturate(210%) !important;
-    -webkit-backdrop-filter: blur(28px) saturate(210%) !important;
-    border-radius: 14px !important;
-    border: 1px solid rgba(255, 255, 255, 0.45) !important;
-    border-top: 1px solid rgba(255, 255, 255, 0.75) !important;
-    padding: 0.8rem 0.95rem !important;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03), inset 0 1px 1px 0 rgba(255, 255, 255, 0.7) !important;
-}
-
-/* ── Print Media Optimization ───────────────────────────── */
-@media print {
-    header, footer, .ambient-orb-blue, .ambient-orb-cyan, .stButton, details, section[data-testid="stSidebar"], .stDownloadButton {
-        display: none !important;
-    }
-    .block-container {
-        max-width: 100% !important;
-        padding: 0 !important;
-    }
-    .apple-glass-card, .risk-card, .metric-tile, .ref-card-row {
-        box-shadow: none !important;
-        border: 1px solid #D1D1D6 !important;
-        background: #FFFFFF !important;
-        break-inside: avoid;
-    }
+    padding: 0.65rem 0.95rem !important;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -853,11 +770,14 @@ div[data-testid="stMetric"] {
 # ─────────────────────────────────────────────
 #  CLINICAL PDF REPORT BUILDER (ReportLab)
 # ─────────────────────────────────────────────
-def generate_clinical_pdf(patient_data, prediction, prob_diabetic, prob_non_diabetic, flags, patient_id="PT-2026-8841"):
+def generate_clinical_pdf(patient_data, prediction, prob_diabetic, prob_non_diabetic, flags, omitted_features=None, patient_id="PT-2026-8841"):
     """
     Generate a print-ready clinical screening report adhering strictly to
     standard hospital/clinical documentation standards.
     """
+    if omitted_features is None:
+        omitted_features = []
+
     buffer = BytesIO()
     doc = SimpleDocTemplate(
         buffer, pagesize=letter,
@@ -917,13 +837,16 @@ def generate_clinical_pdf(patient_data, prediction, prob_diabetic, prob_non_diab
     
     # ── 2. Telemetry Metadata Block ──
     curr_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    model_desc = "ML Pipeline (Dedicated 4-Core Feature Architecture)" if len(omitted_features) == 4 else (
+        "ML Pipeline (8-Features with Population Median Imputation)" if omitted_features else "ML Random Forest Pipeline (Full 8-Feature Vector)"
+    )
     meta_data = [
         [
             Paragraph(f"<b>Patient Identifier:</b> {patient_id}", cell_regular),
             Paragraph(f"<b>Generated Timestamp:</b> {curr_time}", cell_regular),
         ],
         [
-            Paragraph("<b>Diagnostic Model:</b> ML Random Forest Pipeline (8-Features)", cell_regular),
+            Paragraph(f"<b>Diagnostic Model:</b> {model_desc}", cell_regular),
             Paragraph("<b>Target Domain:</b> Type 2 Diabetes Risk Screening", cell_regular),
         ]
     ]
@@ -938,7 +861,6 @@ def generate_clinical_pdf(patient_data, prediction, prob_diabetic, prob_non_diab
     
     # ── 3. Executive Assessment Findings ──
     elements.append(Paragraph("1. ASSESSMENT FINDINGS & RISK STRATIFICATION", section_heading))
-    is_diabetic = (prediction == 1) or (prob_diabetic >= 0.50)
     risk_label = "ELEVATED RISK / LIKELY TO HAVE DIABETES" if prob_diabetic >= 0.65 else ("MODERATE RISK / BORDERLINE" if prob_diabetic >= 0.40 else "LOW RISK / UNLIKELY TO HAVE DIABETES")
     risk_bg = colors.HexColor('#FFE5E5') if prob_diabetic >= 0.65 else (colors.HexColor('#FFF3D6') if prob_diabetic >= 0.40 else colors.HexColor('#E0F9E7'))
     risk_fg = colors.HexColor('#D70015') if prob_diabetic >= 0.65 else (colors.HexColor('#C93400') if prob_diabetic >= 0.40 else colors.HexColor('#248A3D'))
@@ -956,12 +878,28 @@ def generate_clinical_pdf(patient_data, prediction, prob_diabetic, prob_non_diab
         ('BOX', (0,0), (-1,-1), 1, risk_fg),
     ]))
     elements.append(findings_table)
+
+    # Transparency Note in PDF if parameters omitted
+    if omitted_features:
+        elements.append(Spacer(1, 5))
+        omitted_text = (
+            f"<i><b>Clinical Transparency Note:</b> Assessment calculated using 4 core metrics + standard population "
+            f"baselines for omitted lab tests ({', '.join(omitted_features)}).</i>"
+        )
+        elements.append(Paragraph(omitted_text, ParagraphStyle('OmitNote', parent=styles['Normal'], fontSize=7.5, leading=10, textColor=colors.HexColor('#007AFF'))))
+
     elements.append(Spacer(1, 10))
     
     # ── 4. Patient Input Profile & Benchmark Comparison ──
     elements.append(Paragraph("2. SUBMITTED CLINICAL PARAMETERS VS. BASELINE BENCHMARKS", section_heading))
     param_rows = [
-        [Paragraph("Clinical Parameter", cell_bold), Paragraph("Submitted Value", cell_bold), Paragraph("Standard Unit", cell_bold), Paragraph("Baseline Target Norm", cell_bold)]
+        [
+            Paragraph("Clinical Parameter", cell_bold),
+            Paragraph("Value (Submitted / Imputed)", cell_bold),
+            Paragraph("Status", cell_bold),
+            Paragraph("Standard Unit", cell_bold),
+            Paragraph("Baseline Target Norm", cell_bold)
+        ]
     ]
     ref_norms = {
         "Glucose": ("mg/dL", "70 – 99 mg/dL"),
@@ -973,17 +911,22 @@ def generate_clinical_pdf(patient_data, prediction, prob_diabetic, prob_non_diab
         "Pregnancies": ("count", "0 – 2"),
         "DiabetesPedigreeFunction": ("score", "< 0.50"),
     }
-    for k, v in patient_data.items():
-        unit, norm = ref_norms.get(k, ("", "—"))
-        val_str = f"{v:.2f}" if isinstance(v, float) else f"{v}"
-        param_rows.append([
-            Paragraph(FEATURE_META.get(k, {}).get("label", k), cell_regular),
-            Paragraph(f"<b>{val_str}</b>", cell_bold),
-            Paragraph(unit, cell_regular),
-            Paragraph(norm, cell_regular),
-        ])
+    for k in ALL_FEATURES:
+        if k in patient_data:
+            v = patient_data[k]
+            unit, norm = ref_norms.get(k, ("", "—"))
+            val_str = f"{v:.2f}" if isinstance(v, float) else f"{v}"
+            is_imputed = k in omitted_features
+            status_str = "<font color='#007AFF'><b>Imputed Baseline</b></font>" if is_imputed else "<font color='#248A3D'><b>Measured</b></font>"
+            param_rows.append([
+                Paragraph(FEATURE_META.get(k, {}).get("label", k), cell_regular),
+                Paragraph(f"<b>{val_str}</b>", cell_bold),
+                Paragraph(status_str, cell_regular),
+                Paragraph(unit, cell_regular),
+                Paragraph(norm, cell_regular),
+            ])
     
-    param_table = Table(param_rows, colWidths=[160, 110, 120, 150])
+    param_table = Table(param_rows, colWidths=[150, 110, 95, 75, 110])
     param_table.setStyle(TableStyle([
         ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#E5E5EA')),
         ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#D1D1D6')),
@@ -1030,7 +973,7 @@ def generate_clinical_pdf(patient_data, prediction, prob_diabetic, prob_non_diab
     return buffer.getvalue()
 
 # ─────────────────────────────────────────────
-#  DATA & MODEL LOADING
+#  DATA & MODEL LOADING (DUAL-ROUTING)
 # ─────────────────────────────────────────────
 @st.cache_data
 def load_dataset():
@@ -1045,81 +988,79 @@ def _clean_df(df):
     df[zero_cols] = df[zero_cols].replace(0, np.nan)
     return df
 
-def _train_fresh_pipeline(df):
-    """Train a fresh pipeline on the full 8-feature set and return it with metrics."""
-    df = _clean_df(df)
-    X = df[ALL_FEATURES]
-    y = df[TARGET]
+def _train_models(df):
+    """Train both 8-feature and 4-feature pipelines."""
+    clean = _clean_df(df)
+    y = clean[TARGET]
 
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.20, random_state=42, stratify=y
+    # 1. Train 8-feature pipeline
+    X8 = clean[ALL_FEATURES]
+    X8_train, X8_test, y_train, y_test = train_test_split(
+        X8, y, test_size=0.20, random_state=42, stratify=y
     )
+    pipe_8 = Pipeline([
+        ("imputer",    SimpleImputer(strategy="mean")),
+        ("scaler",     MinMaxScaler()),
+        ("classifier", RandomForestClassifier(n_estimators=100, criterion="entropy", random_state=42)),
+    ])
+    pipe_8.fit(X8_train, y_train)
 
-    models = {
-        "Random Forest":       RandomForestClassifier(n_estimators=100, criterion="entropy", random_state=42),
-        "Logistic Regression":  LogisticRegression(max_iter=500, random_state=42),
-        "KNN (k=24)":          KNeighborsClassifier(n_neighbors=24, metric="minkowski", p=2),
-        "Decision Tree":       DecisionTreeClassifier(criterion="entropy", random_state=42),
-    }
+    with open(MODEL_PATH_8, "wb") as f:
+        pickle.dump(pipe_8, f)
 
-    best_name, best_score, best_pipe = None, -1, None
-    metrics_list = []
+    # 2. Train dedicated 4-core feature pipeline
+    X4 = clean[PRIMARY_FEATURES]
+    X4_train, X4_test, _, _ = train_test_split(
+        X4, y, test_size=0.20, random_state=42, stratify=y
+    )
+    pipe_4 = Pipeline([
+        ("imputer",    SimpleImputer(strategy="mean")),
+        ("scaler",     MinMaxScaler()),
+        ("classifier", LogisticRegression(max_iter=500, random_state=42)),
+    ])
+    pipe_4.fit(X4_train, y_train)
 
-    for name, clf in models.items():
-        pipe = Pipeline([
-            ("imputer", SimpleImputer(strategy="mean")),
-            ("scaler",  MinMaxScaler()),
-            ("classifier", clf),
-        ])
-        pipe.fit(X_train, y_train)
-        y_pred = pipe.predict(X_test)
-        acc  = accuracy_score(y_test, y_pred)
-        prec = precision_score(y_test, y_pred, zero_division=0)
-        rec  = recall_score(y_test, y_pred, zero_division=0)
-        f1v  = f1_score(y_test, y_pred, zero_division=0)
-        metrics_list.append({"Model": name, "Accuracy": acc, "Precision": prec, "Recall": rec, "F1": f1v})
-        if acc > best_score:
-            best_score = acc
-            best_name  = name
-            best_pipe  = pipe
+    with open(MODEL_PATH_4, "wb") as f:
+        pickle.dump(pipe_4, f)
 
-    with open(MODEL_PATH, "wb") as f:
-        pickle.dump(best_pipe, f)
-
-    return best_pipe, best_name, ALL_FEATURES, pd.DataFrame(metrics_list)
+    return pipe_8, pipe_4
 
 @st.cache_resource
-def load_model():
+def load_models():
     """
-    Load Diabetesmodel.pkl.
-    If missing or corrupt, retrain from diabetes.csv automatically.
+    Load both 8-feature model (Diabetesmodel.pkl) and 4-feature model (Diabetesmodel_4.pkl).
+    Trains automatically if missing.
     """
     df = load_dataset()
+    pipe_8, pipe_4 = None, None
 
-    if os.path.exists(MODEL_PATH):
+    if os.path.exists(MODEL_PATH_8):
         try:
-            with open(MODEL_PATH, "rb") as f:
-                pipeline = pickle.load(f)
-            n_features = pipeline.n_features_in_
-            if n_features == len(ALL_FEATURES):
-                return pipeline, ALL_FEATURES, None
-            elif n_features == 4:
-                return pipeline, ["Glucose", "BloodPressure", "BMI", "Age"], None
-            else:
-                feature_names = ALL_FEATURES[:n_features]
-                return pipeline, feature_names, None
+            with open(MODEL_PATH_8, "rb") as f:
+                pipe_8 = pickle.load(f)
         except Exception:
-            pass
+            pipe_8 = None
 
-    pipeline, best_name, feature_names, metrics_df = _train_fresh_pipeline(df)
-    return pipeline, feature_names, metrics_df
+    if os.path.exists(MODEL_PATH_4):
+        try:
+            with open(MODEL_PATH_4, "rb") as f:
+                pipe_4 = pickle.load(f)
+        except Exception:
+            pipe_4 = None
+
+    if pipe_8 is None or pipe_4 is None:
+        p8, p4 = _train_models(df)
+        if pipe_8 is None: pipe_8 = p8
+        if pipe_4 is None: pipe_4 = p4
+
+    return pipe_8, pipe_4
 
 @st.cache_data
-def compute_benchmark_metrics(df, feature_names):
+def compute_benchmark_metrics(df):
     """Train and evaluate comparative models for Developer Analytics."""
-    df = _clean_df(df)
-    X = df[feature_names]
-    y = df[TARGET]
+    clean = _clean_df(df)
+    X = clean[ALL_FEATURES]
+    y = clean[TARGET]
 
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.20, random_state=42, stratify=y
@@ -1156,168 +1097,115 @@ def compute_benchmark_metrics(df, feature_names):
 # ─────────────────────────────────────────────
 def _fig_to_buf(fig):
     buf = BytesIO()
-    fig.savefig(buf, format="png", dpi=150, bbox_inches="tight", facecolor=fig.get_facecolor())
+    fig.savefig(buf, format="png", bbox_inches="tight", dpi=150, transparent=True)
     buf.seek(0)
     plt.close(fig)
     return buf
 
-CHART_BG = "#FFFFFF"
-CHART_FG = "#1C1C1E"
-GRID_CLR = "#E5E5EA"
-PALETTE  = ["#007AFF", "#5856D6", "#34C759", "#FF9500", "#FF3B30", "#AF52DE"]
-
-def plot_correlation_heatmap(df):
-    fig, ax = plt.subplots(figsize=(9, 7))
-    fig.set_facecolor(CHART_BG)
-    ax.set_facecolor(CHART_BG)
-    numeric = df.select_dtypes(include=[np.number])
-    mask = np.triu(np.ones_like(numeric.corr(), dtype=bool))
-    sns.heatmap(
-        numeric.corr(), mask=mask, annot=True, fmt=".2f",
-        cmap="RdBu_r", center=0, linewidths=.5,
-        ax=ax, cbar_kws={"shrink": .8},
-        annot_kws={"size": 9, "color": CHART_FG},
-    )
-    ax.tick_params(colors=CHART_FG, labelsize=9)
-    ax.set_title("Feature Correlation Matrix", color=CHART_FG, fontsize=14, fontweight="bold", pad=14)
-    return _fig_to_buf(fig)
-
-def plot_confusion_matrix(y_true, y_pred, title="Confusion Matrix"):
+def plot_confusion_matrix(y_true, y_pred, model_name):
     cm = confusion_matrix(y_true, y_pred)
-    fig, ax = plt.subplots(figsize=(5, 4))
-    fig.set_facecolor(CHART_BG)
-    ax.set_facecolor(CHART_BG)
+    fig, ax = plt.subplots(figsize=(4.0, 3.2))
+    fig.patch.set_facecolor('#F2F2F7')
+    ax.set_facecolor('#F2F2F7')
+
     sns.heatmap(
-        cm, annot=True, fmt="d", cmap="Blues",
+        cm, annot=True, fmt="d",
+        cmap="Blues",
+        cbar=False,
         xticklabels=["Non-Diabetic", "Diabetic"],
         yticklabels=["Non-Diabetic", "Diabetic"],
-        ax=ax, annot_kws={"size": 14},
+        ax=ax,
+        annot_kws={"size": 13, "weight": "bold", "color": "#1C1C1E"},
     )
-    ax.set_xlabel("Predicted", color=CHART_FG, fontsize=11)
-    ax.set_ylabel("Actual", color=CHART_FG, fontsize=11)
-    ax.set_title(title, color=CHART_FG, fontsize=13, fontweight="bold", pad=10)
-    ax.tick_params(colors=CHART_FG)
+    ax.set_title(f"Confusion Matrix — {model_name}", fontsize=11, fontweight="bold", pad=8, color="#1C1C1E")
+    ax.set_xlabel("Predicted Class", fontsize=9.5, fontweight="600", color="#636366")
+    ax.set_ylabel("True Class", fontsize=9.5, fontweight="600", color="#636366")
+    ax.tick_params(colors="#636366", labelsize=8.5)
+    plt.tight_layout()
     return _fig_to_buf(fig)
 
-def plot_feature_distributions(df):
-    numeric_cols = df.select_dtypes(include=[np.number]).columns.drop(TARGET, errors="ignore")
-    n = len(numeric_cols)
-    ncols = 4
-    nrows = int(np.ceil(n / ncols))
-    fig, axes = plt.subplots(nrows, ncols, figsize=(16, nrows * 3.2))
-    fig.set_facecolor(CHART_BG)
-    axes = axes.flatten()
-    for i, col in enumerate(numeric_cols):
-        ax = axes[i]
-        ax.set_facecolor("#FAFAFA")
-        ax.hist(df[col].dropna(), bins=25, color=PALETTE[i % len(PALETTE)], alpha=.85, edgecolor="#FFFFFF")
-        ax.set_title(col, color=CHART_FG, fontsize=11, fontweight="bold")
-        ax.tick_params(colors=CHART_FG, labelsize=8)
-        for spine in ax.spines.values():
-            spine.set_color(GRID_CLR)
-    for j in range(i + 1, len(axes)):
-        fig.delaxes(axes[j])
-    fig.tight_layout()
-    return _fig_to_buf(fig)
+def plot_feature_importance(pipeline, feature_names):
+    fig, ax = plt.subplots(figsize=(4.8, 3.2))
+    fig.patch.set_facecolor('#F2F2F7')
+    ax.set_facecolor('#F2F2F7')
 
-def plot_outcome_distribution(df):
-    fig, ax = plt.subplots(figsize=(5, 4))
-    fig.set_facecolor(CHART_BG)
-    ax.set_facecolor("#FAFAFA")
-    counts = df[TARGET].value_counts().sort_index()
-    bars = ax.bar(["Non-Diabetic (0)", "Diabetic (1)"], counts.values,
-                  color=[PALETTE[2], PALETTE[4]], edgecolor=CHART_BG, width=.55)
+    clf = pipeline.named_steps.get("classifier", None)
+    if hasattr(clf, "feature_importances_"):
+        imps = clf.feature_importances_
+        title = "Random Forest Feature Importance"
+    elif hasattr(clf, "coef_"):
+        imps = np.abs(clf.coef_[0])
+        title = "Model Feature Weight |coef|"
+    else:
+        imps = np.ones(len(feature_names))
+        title = "Feature Relative Influence"
+
+    idx = np.argsort(imps)
+    sorted_feats = [feature_names[i] for i in idx]
+    sorted_imps  = imps[idx]
+
+    bars = ax.barh(sorted_feats, sorted_imps, color="#007AFF", height=0.55, edgecolor="none")
     for bar in bars:
-        h = bar.get_height()
-        ax.text(bar.get_x() + bar.get_width() / 2, h + 8, str(int(h)),
-                ha="center", va="bottom", color=CHART_FG, fontweight="bold", fontsize=13)
-    ax.set_ylabel("Count", color=CHART_FG)
-    ax.set_title("Class Balance (Outcome)", color=CHART_FG, fontsize=13, fontweight="bold", pad=10)
-    ax.tick_params(colors=CHART_FG)
-    for spine in ax.spines.values():
-        spine.set_color(GRID_CLR)
+        w = bar.get_width()
+        ax.text(w + 0.005, bar.get_y() + bar.get_height()/2, f"{w:.3f}",
+                va="center", ha="left", fontsize=7.5, color="#636366", fontweight="600")
+
+    ax.set_title(title, fontsize=10.5, fontweight="bold", pad=8, color="#1C1C1E")
+    ax.set_xlabel("Importance Weight", fontsize=8.5, fontweight="600", color="#636366")
+    ax.tick_params(colors="#636366", labelsize=8)
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+    ax.spines["left"].set_color("#D1D1D6")
+    ax.spines["bottom"].set_color("#D1D1D6")
+    plt.tight_layout()
     return _fig_to_buf(fig)
 
-def plot_benchmark_bars(metrics_df):
-    fig, ax = plt.subplots(figsize=(9, 5))
-    fig.set_facecolor(CHART_BG)
-    ax.set_facecolor("#FAFAFA")
-    x = np.arange(len(metrics_df))
-    w = 0.2
-    for i, col in enumerate(["Accuracy", "Precision", "Recall", "F1"]):
-        bars = ax.bar(x + i * w, metrics_df[col], w, label=col, color=PALETTE[i], alpha=.9)
-        for bar in bars:
-            h = bar.get_height()
-            ax.text(bar.get_x() + bar.get_width() / 2, h + 0.015, f"{h*100:.0f}%",
-                    ha="center", va="bottom", fontsize=8, color=CHART_FG, rotation=90)
-    ax.set_xticks(x + 1.5 * w)
-    ax.set_xticklabels(metrics_df["Model"], color=CHART_FG, fontweight="600")
-    ax.set_ylabel("Score", color=CHART_FG)
-    ax.set_ylim(0, 1.15)
-    ax.set_title("Model Performance Benchmark", color=CHART_FG, fontsize=14, fontweight="bold", pad=12)
-    ax.legend(loc="upper right", fontsize=9, framealpha=0.6)
-    ax.tick_params(colors=CHART_FG)
-    for spine in ax.spines.values():
-        spine.set_color(GRID_CLR)
-    return _fig_to_buf(fig)
+def plot_risk_gauge(prob_diabetic):
+    fig, ax = plt.subplots(figsize=(4.6, 2.3), subplot_kw={"projection": "polar"})
+    fig.patch.set_facecolor('#F2F2F7')
+    ax.set_facecolor('#F2F2F7')
 
-def plot_risk_gauge(probability):
-    """Semicircular polar gauge showing risk probability with Apple Health styling."""
-    fig, ax = plt.subplots(figsize=(4.5, 2.8), subplot_kw={"projection": "polar"})
-    fig.set_facecolor(CHART_BG)
-    ax.set_facecolor(CHART_BG)
+    theta_full = np.linspace(np.pi, 0, 300)
+    r_inner = 0.65
+    r_outer = 1.0
 
-    theta_bg = np.linspace(np.pi, 0, 200)
-    ax.fill_between(theta_bg, 0.6, 1.0, color="#E5E5EA", alpha=.5)
+    ax.fill_between(theta_full[:100], r_inner, r_outer, color="#34C759", alpha=0.85)
+    ax.fill_between(theta_full[100:200], r_inner, r_outer, color="#FF9500", alpha=0.85)
+    ax.fill_between(theta_full[200:], r_inner, r_outer, color="#FF3B30", alpha=0.85)
 
-    # Green zone: 0 to 40%
-    th_green = np.linspace(np.pi, np.pi * 0.6, 100)
-    ax.fill_between(th_green, 0.62, 0.98, color="#34C759", alpha=.55)
+    needle_angle = np.pi - (prob_diabetic * np.pi)
+    ax.annotate(
+        "",
+        xy=(needle_angle, 0.96),
+        xytext=(0, 0),
+        arrowprops=dict(arrowstyle="->", color="#1C1C1E", lw=3.0, mutation_scale=16),
+    )
+    ax.plot(0, 0, "o", color="#1C1C1E", markersize=8)
 
-    # Orange zone: 40% to 65%
-    th_orange = np.linspace(np.pi * 0.6, np.pi * 0.35, 100)
-    ax.fill_between(th_orange, 0.62, 0.98, color="#FF9500", alpha=.55)
-
-    # Red zone: 65% to 100%
-    th_red = np.linspace(np.pi * 0.35, 0, 100)
-    ax.fill_between(th_red, 0.62, 0.98, color="#FF3B30", alpha=.55)
-
-    # Needle
-    needle_theta = np.pi * (1.0 - np.clip(probability, 0.0, 1.0))
-    ax.plot([needle_theta, needle_theta], [0, 0.88], color="#1C1C1E", linewidth=3.5, solid_capstyle="round")
-    ax.plot([needle_theta], [0], marker="o", markersize=10, color="#1C1C1E")
-
-    ax.set_thetamin(0)
-    ax.set_thetamax(180)
     ax.set_ylim(0, 1.05)
-    ax.axis("off")
+    ax.set_yticklabels([])
+    ax.set_xticks([np.pi, np.pi/2, 0])
+    ax.set_xticklabels(["Low", "", "High"], fontsize=9.5, fontweight="bold", color="#636366")
+    ax.spines["polar"].set_visible(False)
+    ax.grid(False)
 
-    fig.text(0.5, 0.18, f"{probability*100:.1f}%", ha="center", va="center",
-             fontsize=26, fontweight="800", color=CHART_FG)
-    fig.text(0.5, 0.04, "Diabetes Risk Score", ha="center", va="center",
-             fontsize=10, fontweight="600", color="#8E8E93")
-    fig.text(0.12, 0.28, "Low", ha="center", fontsize=9, fontweight="700", color="#34C759")
-    fig.text(0.88, 0.28, "High", ha="center", fontsize=9, fontweight="700", color="#FF3B30")
-
+    pct_str = f"{prob_diabetic*100:.1f}%"
+    ax.text(
+        0, -0.22, pct_str,
+        ha="center", va="center",
+        fontsize=22, fontweight="900", color="#1C1C1E",
+    )
+    ax.text(
+        0, -0.42, "Diabetes Risk Score",
+        ha="center", va="center",
+        fontsize=8.5, fontweight="700", color="#8E8E93",
+    )
+    plt.tight_layout()
     return _fig_to_buf(fig)
 
 # ─────────────────────────────────────────────
-#  SYNCHRONIZED DUAL-INPUT STATE HANDLERS
+#  PRESET STATE HANDLER
 # ─────────────────────────────────────────────
-def sync_from_slider(feat):
-    """Update canonical value and numeric box when slider thumb moves."""
-    val = st.session_state[f"slider_{feat}"]
-    st.session_state[f"input_{feat}"] = val
-    st.session_state[f"num_{feat}"] = val
-
-def sync_from_num(feat):
-    """Update canonical value and slider thumb when numeric input changes."""
-    val = st.session_state[f"num_{feat}"]
-    meta = FEATURE_META[feat]
-    clamped = max(meta["type"](meta["min"]), min(meta["type"](meta["max"]), val))
-    st.session_state[f"input_{feat}"] = clamped
-    st.session_state[f"slider_{feat}"] = clamped
-
 def apply_preset(preset_name):
     """Apply clinical preset values to all session states."""
     if preset_name in PRESETS and PRESETS[preset_name] is not None:
@@ -1325,9 +1213,204 @@ def apply_preset(preset_name):
         for f, v in values.items():
             if f in FEATURE_META:
                 cast_v = FEATURE_META[f]["type"](v)
-                st.session_state[f"input_{f}"] = cast_v
                 st.session_state[f"slider_{f}"] = cast_v
                 st.session_state[f"num_{f}"] = cast_v
+                st.session_state[f"input_{f}"] = cast_v
+        # When an explicit clinical preset is picked, uncheck skips
+        for f in ADVANCED_FEATURES:
+            st.session_state[f"skip_{f}"] = False
+        st.session_state["toggle_advanced_biomarkers"] = True
+
+# ─────────────────────────────────────────────
+#  CLIENT-SIDE DUAL-INPUT SYNC ENGINE (JS)
+# ─────────────────────────────────────────────
+def inject_client_sync_engine():
+    """
+    Zero-Latency Dual-Input Synchronization & Stepper Buffer Engine.
+    Runs in the browser DOM to provide:
+      1. 0 ms perceptible latency on every slider drag tick.
+      2. Stepper '+' / '-' decoupling with a fast local state buffer,
+         preventing dropped clicks and UI freezes.
+      3. Smooth capsule progress bar geometry under the translucent thumb.
+    """
+    components.html(
+        """
+        <script>
+        (function() {
+            function initDualInputSync() {
+                const rootDoc = window.parent.document || document;
+                const sliders = Array.from(rootDoc.querySelectorAll('div[data-testid="stSlider"]'));
+                const numbers = Array.from(rootDoc.querySelectorAll('div[data-testid="stNumberInput"]'));
+
+                if (sliders.length === 0 || numbers.length === 0) return;
+
+                const nativeInputSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
+
+                sliders.forEach(sliderElem => {
+                    if (sliderElem.dataset.syncBound === "true") return;
+
+                    const labelElem = sliderElem.querySelector('label') || sliderElem.querySelector('[data-testid="stWidgetLabel"]');
+                    const labelText = labelElem ? labelElem.innerText.trim() : '';
+
+                    const numberElem = numbers.find(n => {
+                        const nLabel = n.querySelector('label') || n.querySelector('[data-testid="stWidgetLabel"]');
+                        return nLabel && nLabel.innerText.trim() === labelText;
+                    });
+
+                    if (!numberElem) return;
+
+                    sliderElem.dataset.syncBound = "true";
+                    numberElem.dataset.syncBound = "true";
+
+                    const numInput = numberElem.querySelector('input');
+                    const rangeInput = sliderElem.querySelector('input[type="range"]');
+                    const thumb = sliderElem.querySelector('div[class*="efbyxod3"]') || sliderElem.querySelector('[role="slider"]');
+                    const track = sliderElem.querySelector('div[class*="efbyxod5"]') || sliderElem.querySelector('div[data-baseweb="slider"] > div');
+                    const incBtn = numberElem.querySelector('button[aria-label="Increment"]');
+                    const decBtn = numberElem.querySelector('button[aria-label="Decrement"]');
+
+                    if (!numInput || !rangeInput) return;
+
+                    const min = parseFloat(rangeInput.min) || 0;
+                    const max = parseFloat(rangeInput.max) || 100;
+                    const step = parseFloat(rangeInput.step) || 1;
+                    const isFloat = step < 1 || (step % 1 !== 0);
+
+                    function formatVal(v) {
+                        if (isFloat) {
+                            return (Math.round(v * 100) / 100).toFixed(step < 0.1 ? 2 : 1);
+                        }
+                        return Math.round(v).toString();
+                    }
+
+                    function updatePillVisuals(val, source) {
+                        const clamped = Math.max(min, Math.min(max, val));
+                        const pct = ((clamped - min) / (max - min)) * 100;
+
+                        // Capsule progress bar fill
+                        if (track) {
+                            track.style.setProperty('--slider-fill', pct + '%');
+                        }
+                        // Pill thumb position
+                        if (thumb) {
+                            thumb.style.left = pct + '%';
+                        }
+
+                        // Sync text box on slider movement
+                        if (source === 'slider' && numInput) {
+                            nativeInputSetter.call(numInput, formatVal(clamped));
+                            numInput.dispatchEvent(new Event('input', { bubbles: true }));
+                        }
+
+                        // Sync range input on number box movement
+                        if (source === 'number' && rangeInput) {
+                            nativeInputSetter.call(rangeInput, clamped.toString());
+                            rangeInput.dispatchEvent(new Event('input', { bubbles: true }));
+                        }
+                    }
+
+                    // Initial coordinate sync
+                    const initialVal = parseFloat(numInput.value || rangeInput.value);
+                    updatePillVisuals(initialVal, 'init');
+
+                    // 1. INSTANT CLIENT-SIDE SLIDER DRAG SYNCHRONIZATION (0 ms)
+                    rangeInput.addEventListener('input', (e) => {
+                        const v = parseFloat(e.target.value);
+                        updatePillVisuals(v, 'slider');
+                    });
+
+                    let isDragging = false;
+                    function onPointerMove(e) {
+                        if (!track) return;
+                        const rect = track.getBoundingClientRect();
+                        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                        const pct = Math.max(0, Math.min(100, ((clientX - rect.left) / rect.width) * 100));
+                        const raw = min + (pct / 100) * (max - min);
+                        const stepped = isFloat ? Math.round(raw / step) * step : Math.round(raw);
+                        updatePillVisuals(stepped, 'slider');
+                    }
+
+                    sliderElem.addEventListener('pointerdown', (e) => {
+                        isDragging = true;
+                        onPointerMove(e);
+                    });
+
+                    rootDoc.addEventListener('pointermove', (e) => {
+                        if (!isDragging) return;
+                        onPointerMove(e);
+                    });
+
+                    rootDoc.addEventListener('pointerup', () => {
+                        if (!isDragging) return;
+                        isDragging = false;
+                        if (numInput) numInput.dispatchEvent(new Event('change', { bubbles: true }));
+                        if (rangeInput) rangeInput.dispatchEvent(new Event('change', { bubbles: true }));
+                    });
+
+                    // 2. STEPPER RAPID-CLICK FREEZE BUG FIX (DECOUPLED LOCAL BUFFER)
+                    let stepperBuffer = parseFloat(numInput.value) || initialVal;
+                    let stepperTimer = null;
+
+                    function onStepperClick(delta, e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        e.stopImmediatePropagation();
+
+                        stepperBuffer = parseFloat(numInput.value) || stepperBuffer;
+                        stepperBuffer = Math.max(min, Math.min(max, stepperBuffer + delta));
+                        if (!isFloat) stepperBuffer = Math.round(stepperBuffer);
+                        else stepperBuffer = Math.round(stepperBuffer / step) * step;
+
+                        // Immediate 0 ms update to input box and slider progress bar
+                        updatePillVisuals(stepperBuffer, 'number');
+
+                        // Debounce commitment to prevent UI-blocking server/React reruns
+                        clearTimeout(stepperTimer);
+                        stepperTimer = setTimeout(() => {
+                            nativeInputSetter.call(numInput, formatVal(stepperBuffer));
+                            numInput.dispatchEvent(new Event('change', { bubbles: true }));
+                            nativeInputSetter.call(rangeInput, stepperBuffer.toString());
+                            rangeInput.dispatchEvent(new Event('change', { bubbles: true }));
+                        }, 320);
+                    }
+
+                    if (incBtn) {
+                        incBtn.addEventListener('click', (e) => onStepperClick(step, e), true);
+                        incBtn.addEventListener('pointerdown', (e) => e.stopPropagation(), true);
+                    }
+                    if (decBtn) {
+                        decBtn.addEventListener('click', (e) => onStepperClick(-step, e), true);
+                        decBtn.addEventListener('pointerdown', (e) => e.stopPropagation(), true);
+                    }
+
+                    // 3. DIRECT TEXT BOX TYPING SYNCHRONIZATION
+                    numInput.addEventListener('input', (e) => {
+                        const val = parseFloat(e.target.value);
+                        if (!isNaN(val)) {
+                            stepperBuffer = val;
+                            updatePillVisuals(val, 'number');
+                        }
+                    });
+                    numInput.addEventListener('change', (e) => {
+                        const val = parseFloat(e.target.value);
+                        if (!isNaN(val)) {
+                            const clamped = Math.max(min, Math.min(max, val));
+                            stepperBuffer = clamped;
+                            updatePillVisuals(clamped, 'number');
+                        }
+                    });
+                });
+            }
+
+            // Execute immediately and monitor DOM additions
+            initDualInputSync();
+            setInterval(initDualInputSync, 350);
+        })();
+        </script>
+        """,
+        height=0,
+        width=0,
+    )
 
 # ─────────────────────────────────────────────
 #  MAIN APPLICATION
@@ -1340,18 +1423,23 @@ def main():
     if "predict_counter" not in st.session_state:
         st.session_state.predict_counter = 0
 
-    # Load data & machine learning model
+    # Load data & machine learning models (Dual-Routing: 8-feature & 4-feature)
     df = load_dataset()
-    pipeline, feature_names, _ = load_model()
+    pipeline_8, pipeline_4 = load_models()
 
     # Initialize session states for all features
     for f in ALL_FEATURES:
         meta = FEATURE_META[f]
-        if f"input_{f}" not in st.session_state:
+        if f"slider_{f}" not in st.session_state:
             def_val = meta["type"](meta["default"])
-            st.session_state[f"input_{f}"] = def_val
             st.session_state[f"slider_{f}"] = def_val
             st.session_state[f"num_{f}"] = def_val
+            st.session_state[f"input_{f}"] = def_val
+        if f"skip_{f}" not in st.session_state:
+            st.session_state[f"skip_{f}"] = False
+
+    if "toggle_advanced_biomarkers" not in st.session_state:
+        st.session_state["toggle_advanced_biomarkers"] = False
 
     # ═══════════════════════════════════════════
     #  DEVELOPER DRAWER (SIDEBAR)
@@ -1359,68 +1447,47 @@ def main():
     with st.sidebar:
         st.markdown(f'''
         <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 0.5rem;">
-            {render_badge("activity", "icon-badge-blue")}
-            <h2 style="margin: 0; font-size: 1.25rem;">Developer Analytics</h2>
+            {SVG_ICONS["activity"]}
+            <h2 style="font-size: 1.25rem; font-weight: 800; margin: 0; color: #1C1C1E;">Developer Drawer</h2>
         </div>
+        <p style="font-size: 0.80rem; color: #8E8E93; margin-bottom: 1rem;">
+            Diagnostic Telemetry & Model Benchmarking
+        </p>
         ''', unsafe_allow_html=True)
-        st.markdown('<div class="section-label">MODEL TELEMETRY & HEALTH</div>', unsafe_allow_html=True)
 
-        clf = pipeline.named_steps.get("classifier", None)
-        clf_name = type(clf).__name__ if clf else "Supervised Pipeline"
+        benchmark_df, benchmark_preds = compute_benchmark_metrics(df)
 
-        m_col1, m_col2 = st.columns(2)
-        with m_col1:
-            st.metric("Model Architecture", clf_name.replace("Classifier", ""))
-        with m_col2:
-            st.metric("Feature Dimensions", f"{pipeline.n_features_in_} Inputs")
+        st.markdown("#### Model Performance Benchmarks")
+        display_df = benchmark_df.copy()
+        for col in ["Accuracy", "Precision", "Recall", "F1"]:
+            display_df[col] = display_df[col].apply(lambda v: f"{v*100:.2f}%")
+        st.dataframe(display_df, use_container_width=True, hide_index=True)
 
-        st.markdown("")
-        metrics_df, preds_dict = compute_benchmark_metrics(df, feature_names)
-
-        st.markdown('<div class="section-label">BENCHMARK EVALUATION (TEST SPLIT)</div>', unsafe_allow_html=True)
-        st.dataframe(
-            metrics_df.style.format({
-                "Accuracy": "{:.3f}", "Precision": "{:.3f}", "Recall": "{:.3f}", "F1": "{:.3f}"
-            }),
-            use_container_width=True,
-            hide_index=True,
+        st.markdown("---")
+        st.markdown("#### Diagnostic Confusion Matrix")
+        selected_model = st.selectbox(
+            "Evaluation Classifier",
+            list(benchmark_preds.keys()),
+            index=0,
+            key="dev_model_select"
         )
+        y_test, y_pred = benchmark_preds[selected_model]
+        cm_buf = plot_confusion_matrix(y_test, y_pred, selected_model)
+        st.image(cm_buf, use_container_width=True)
 
-        st.markdown("")
-        st.markdown('<div class="section-label">DIAGNOSTIC CHARTS</div>', unsafe_allow_html=True)
-
-        chart_choice = st.selectbox(
-            "Select Diagnostic Telemetry Visualizer",
-            ["Model Performance Comparison", "Active Classifier Confusion Matrix", "Feature Correlation Heatmap", "Feature Distributions", "Class Balance"],
-            label_visibility="collapsed"
-        )
-
-        if chart_choice == "Model Performance Comparison":
-            fig_buf = plot_benchmark_bars(metrics_df)
-            st.image(fig_buf, use_container_width=True)
-        elif chart_choice == "Active Classifier Confusion Matrix":
-            active_key = "Random Forest" if "Random Forest" in preds_dict else list(preds_dict.keys())[0]
-            y_test, y_pred = preds_dict[active_key]
-            fig_buf = plot_confusion_matrix(y_test, y_pred, title=f"Confusion Matrix ({active_key})")
-            st.image(fig_buf, use_container_width=True)
-        elif chart_choice == "Feature Correlation Heatmap":
-            fig_buf = plot_correlation_heatmap(df)
-            st.image(fig_buf, use_container_width=True)
-        elif chart_choice == "Feature Distributions":
-            fig_buf = plot_feature_distributions(df)
-            st.image(fig_buf, use_container_width=True)
-        elif chart_choice == "Class Balance":
-            fig_buf = plot_outcome_distribution(df)
-            st.image(fig_buf, use_container_width=True)
+        st.markdown("---")
+        st.markdown("#### Feature Importance Profile")
+        fi_buf = plot_feature_importance(pipeline_8, ALL_FEATURES)
+        st.image(fi_buf, use_container_width=True)
 
     # ═══════════════════════════════════════════
-    #  MAIN CONTENT AREA: APPLE HEALTH HERO BANNER
+    #  HERO TELEMETRY BANNER
     # ═══════════════════════════════════════════
     st.markdown(f'''
     <div class="hero-banner">
         <div class="hero-badge">
             {SVG_ICONS["activity"]}
-            <span>Clinical Decision Support Telemetry</span>
+            Clinical Decision Support Telemetry
         </div>
         <h1>AI Diabetes Risk Assessment</h1>
         <p>
@@ -1430,43 +1497,36 @@ def main():
     </div>
     ''', unsafe_allow_html=True)
 
-    # ── Clinical Preset Selector Row ──
-    p_col_label, p_col_select = st.columns([1.6, 3.4])
-    with p_col_label:
-        st.markdown('<div class="section-label" style="padding-top: 8px;">CLINICAL PRESET PROFILE</div>', unsafe_allow_html=True)
-    with p_col_select:
-        selected_preset = st.selectbox(
-            "Quick-Fill Clinical Preset",
-            list(PRESETS.keys()),
-            label_visibility="collapsed",
-            key="preset_selector",
-        )
-        if selected_preset != "Custom Profile" and PRESETS[selected_preset] is not None:
-            if st.session_state.get("last_applied_preset") != selected_preset:
-                apply_preset(selected_preset)
-                st.session_state["last_applied_preset"] = selected_preset
-
-    st.markdown("")
-
-    # ═══════════════════════════════════════════════════════════════════
-    #  2. SIDE-BY-SIDE DUAL-COLUMN ARCHITECTURE (ZERO VERTICAL SCROLL)
-    # ═══════════════════════════════════════════════════════════════════
-    col_input_panel, col_ref_panel = st.columns([59, 41], gap="large")
+    # ═══════════════════════════════════════════
+    #  BALANCED DUAL-COLUMN DESKTOP ARCHITECTURE
+    # ═══════════════════════════════════════════
+    col_input_panel, col_ref_panel = st.columns([5.9, 4.1], gap="medium")
 
     input_values = {}
+    omitted_list = []
 
     # ─────────────────────────────────────────────────────────────
-    #  LEFT COLUMN (59%): PATIENT CLINICAL INPUT PANEL
+    #  LEFT COLUMN (59%): PATIENT CLINICAL INPUT PROFILE
     # ─────────────────────────────────────────────────────────────
     with col_input_panel:
-        st.markdown('<div class="section-label">PATIENT CLINICAL INPUTS</div>', unsafe_allow_html=True)
+        # ── Clinical Preset Selector Row ──
+        st.markdown('<div class="section-label">CLINICAL PRESET PROFILE</div>', unsafe_allow_html=True)
+        selected_preset = st.selectbox(
+            label="Clinical Preset",
+            options=list(PRESETS.keys()),
+            index=0,
+            key="preset_selector",
+            label_visibility="collapsed",
+        )
+        if selected_preset != st.session_state.get("current_preset", "Custom Profile"):
+            apply_preset(selected_preset)
+            st.session_state["current_preset"] = selected_preset
+            st.rerun()
 
-        primary_feats   = [f for f in feature_names if FEATURE_META[f]["primary"]]
-        secondary_feats = [f for f in feature_names if not FEATURE_META[f]["primary"]]
-
-        # ── Primary Input Rows (Glass Container) ──
+        # ── 1. Primary Clinical Metrics (Required) Glass Container ──
+        st.markdown('<div class="section-label" style="margin-top: 0.6rem;">PRIMARY CLINICAL METRICS (REQUIRED)</div>', unsafe_allow_html=True)
         with st.container(border=True):
-            for feat in primary_feats:
+            for feat in PRIMARY_FEATURES:
                 meta = FEATURE_META[feat]
                 unit_str = f"({meta['unit']})" if meta["unit"] else ""
                 
@@ -1481,7 +1541,7 @@ def main():
                 </div>
                 ''', unsafe_allow_html=True)
 
-                # Control row: Sleek Slider (72%) + Synchronized Number Input (28%)
+                # Control row: Sleek Slider (73%) + Synchronized Number Input (27%)
                 c_slide, c_num = st.columns([3.4, 1.25])
                 with c_slide:
                     st.slider(
@@ -1491,8 +1551,6 @@ def main():
                         value=meta["type"](st.session_state[f"slider_{feat}"]),
                         step=meta["type"](meta["step"]) if meta["type"] == float else meta["step"],
                         key=f"slider_{feat}",
-                        on_change=sync_from_slider,
-                        args=(feat,),
                         label_visibility="collapsed",
                     )
                 with c_num:
@@ -1503,19 +1561,64 @@ def main():
                         value=meta["type"](st.session_state[f"num_{feat}"]),
                         step=meta["type"](meta["step"]) if meta["type"] == float else meta["step"],
                         key=f"num_{feat}",
-                        on_change=sync_from_num,
-                        args=(feat,),
                         label_visibility="collapsed",
                     )
-                input_values[feat] = st.session_state[f"input_{feat}"]
+                input_values[feat] = st.session_state.get(f"num_{feat}", st.session_state[f"slider_{feat}"])
 
-            # ── Secondary Input Rows (Collapsible Glass Expander) ──
-            if secondary_feats:
-                with st.expander("Advanced Clinical Parameters (Click to expand)", expanded=False):
-                    for feat in secondary_feats:
-                        meta = FEATURE_META[feat]
-                        unit_str = f"({meta['unit']})" if meta["unit"] else ""
-                        
+        # ── 2. Advanced Laboratory Biomarkers (Optional) Collapsible Card ──
+        st.markdown('<div class="section-label" style="margin-top: 0.6rem;">ADVANCED LABORATORY BIOMARKERS (OPTIONAL)</div>', unsafe_allow_html=True)
+        with st.expander("Advanced Clinical Metrics (Optional) — Click to include laboratory records", expanded=st.session_state.get("toggle_advanced_biomarkers", False)):
+            st.markdown(f'''
+            <div style="font-size: 0.82rem; color: #636366; margin-bottom: 0.65rem; line-height: 1.4;">
+                Include only if you have recent laboratory bloodwork or medical records.
+                Unmeasured parameters will automatically use standardized population medians.
+            </div>
+            ''', unsafe_allow_html=True)
+
+            has_advanced = st.toggle(
+                "I have specialized laboratory bloodwork results",
+                value=st.session_state.get("toggle_advanced_biomarkers", False),
+                key="toggle_advanced_biomarkers"
+            )
+
+            for feat in ADVANCED_FEATURES:
+                meta = FEATURE_META[feat]
+                unit_str = f"({meta['unit']})" if meta["unit"] else ""
+                median_val = POPULATION_MEDIANS[feat]
+
+                if not has_advanced:
+                    # Biomarker omitted by default
+                    omitted_list.append(feat)
+                    st.markdown(f'''
+                    <div class="metric-row-header" style="margin-top: 6px; opacity: 0.85;">
+                        <div class="metric-title-group">
+                            {render_badge(meta["icon"], meta["badge"])}
+                            <span class="metric-row-title">{meta["label"]}</span>
+                        </div>
+                        <span class="imputation-tag">Population Baseline: {median_val} {meta["unit"]} (Imputed)</span>
+                    </div>
+                    ''', unsafe_allow_html=True)
+                    input_values[feat] = median_val
+                else:
+                    # User toggled advanced section on: offer individual skip option
+                    skip_this = st.checkbox(
+                        meta.get("skip_label", f"Skip / Not tested for {meta['label']}"),
+                        value=st.session_state.get(f"skip_{feat}", False),
+                        key=f"skip_{feat}"
+                    )
+                    if skip_this:
+                        omitted_list.append(feat)
+                        st.markdown(f'''
+                        <div class="metric-row-header" style="margin-top: 4px; opacity: 0.75;">
+                            <div class="metric-title-group">
+                                {render_badge(meta["icon"], meta["badge"])}
+                                <span class="metric-row-title">{meta["label"]}</span>
+                            </div>
+                            <span class="imputation-tag">Baseline: {median_val} {meta["unit"]} (Imputed)</span>
+                        </div>
+                        ''', unsafe_allow_html=True)
+                        input_values[feat] = median_val
+                    else:
                         st.markdown(f'''
                         <div class="metric-row-header" style="margin-top: 6px;">
                             <div class="metric-title-group">
@@ -1535,8 +1638,6 @@ def main():
                                 value=meta["type"](st.session_state[f"slider_{feat}"]),
                                 step=meta["type"](meta["step"]) if meta["type"] == float else meta["step"],
                                 key=f"slider_{feat}",
-                                on_change=sync_from_slider,
-                                args=(feat,),
                                 label_visibility="collapsed",
                             )
                         with c_num:
@@ -1547,15 +1648,13 @@ def main():
                                 value=meta["type"](st.session_state[f"num_{feat}"]),
                                 step=meta["type"](meta["step"]) if meta["type"] == float else meta["step"],
                                 key=f"num_{feat}",
-                                on_change=sync_from_num,
-                                args=(feat,),
                                 label_visibility="collapsed",
                             )
-                        input_values[feat] = st.session_state[f"input_{feat}"]
+                        input_values[feat] = st.session_state.get(f"num_{feat}", st.session_state[f"slider_{feat}"])
 
-            # Action Button anchored at the base of the input card
-            st.markdown('<div style="margin-top: 10px;"></div>', unsafe_allow_html=True)
-            predict_btn = st.button("Run Risk Assessment", type="primary", use_container_width=True)
+        # Action Button anchored at the base of the input card
+        st.markdown('<div style="margin-top: 10px;"></div>', unsafe_allow_html=True)
+        predict_btn = st.button("Run Risk Assessment", type="primary", use_container_width=True)
 
     # ─────────────────────────────────────────────────────────────
     #  RIGHT COLUMN (41%): CLINICAL REFERENCE BENCHMARKS CONTAINER
@@ -1633,7 +1732,7 @@ def main():
 
         # Secondary Reference Note for Serum Insulin
         st.markdown(f'''
-        <div class="ref-card-row" style="opacity: 0.92;">
+        <div class="ref-card-row" style="opacity: 0.95;">
             <div class="ref-meta-left">
                 {render_badge("syringe", "icon-badge-teal")}
                 <div>
@@ -1647,6 +1746,11 @@ def main():
             </div>
         </div>
         ''', unsafe_allow_html=True)
+
+    # ═══════════════════════════════════════════
+    #  INJECT CLIENT-SIDE SYNC ENGINE
+    # ═══════════════════════════════════════════
+    inject_client_sync_engine()
 
     # ═══════════════════════════════════════════
     #  ASSESSMENT RESULTS & PDF REPORT EXPORT
@@ -1665,7 +1769,8 @@ def main():
                 (function() {{
                     const runId = {current_run_id};
                     setTimeout(function() {{
-                        const el = window.parent.document.getElementById('assessment-result-anchor');
+                        const doc = window.parent.document;
+                        const el = doc.getElementById('assessment-result-anchor');
                         if (el) {{
                             el.scrollIntoView({{ behavior: 'smooth', block: 'start' }});
                         }}
@@ -1677,24 +1782,46 @@ def main():
             width=0,
         )
 
-        # Prepare model input payload
-        row = {feat: input_values.get(feat, FEATURE_META[feat]["default"]) for feat in feature_names}
-        for zf in ["Glucose", "BloodPressure", "SkinThickness", "Insulin", "BMI"]:
-            if zf in row and row[zf] == 0:
-                row[zf] = np.nan
-        patient_df = pd.DataFrame([row], columns=feature_names)
+        # Determine features that were omitted/imputed
+        omitted_in_assessment = [f for f in ADVANCED_FEATURES if f in omitted_list]
 
-        prediction = pipeline.predict(patient_df)[0]
-        if hasattr(pipeline, "predict_proba"):
-            probs = pipeline.predict_proba(patient_df)[0]
+        # ── DUAL-MODEL ROUTING & IMPUTATION INFERENCE ──
+        if len(omitted_in_assessment) == len(ADVANCED_FEATURES) and pipeline_4 is not None:
+            # Approach B: Dedicated 4-feature model routing
+            core_row = {feat: input_values[feat] for feat in PRIMARY_FEATURES}
+            patient_df = pd.DataFrame([core_row], columns=PRIMARY_FEATURES)
+            prediction = pipeline_4.predict(patient_df)[0]
+            if hasattr(pipeline_4, "predict_proba"):
+                probs = pipeline_4.predict_proba(patient_df)[0]
+            else:
+                probs = np.array([1 - prediction, prediction], dtype=float)
         else:
-            probs = np.array([1 - prediction, prediction], dtype=float)
+            # Approach A: 8-feature model with median imputation for omitted parameters
+            row = {feat: input_values.get(feat, FEATURE_META[feat]["default"]) for feat in ALL_FEATURES}
+            for zf in ["Glucose", "BloodPressure", "SkinThickness", "Insulin", "BMI"]:
+                if zf in row and row[zf] == 0:
+                    row[zf] = np.nan
+            patient_df = pd.DataFrame([row], columns=ALL_FEATURES)
+            prediction = pipeline_8.predict(patient_df)[0]
+            if hasattr(pipeline_8, "predict_proba"):
+                probs = pipeline_8.predict_proba(patient_df)[0]
+            else:
+                probs = np.array([1 - prediction, prediction], dtype=float)
 
         prob_diabetic     = float(probs[1])
         prob_non_diabetic = float(probs[0])
 
         st.markdown('<div class="section-label" style="margin-top: 1.4rem;">RISK STRATIFICATION & FINDINGS</div>', unsafe_allow_html=True)
         st.markdown("### Assessment Findings")
+
+        # ── Transparency Status Pill (Client Disclosure) ──
+        if omitted_in_assessment:
+            st.markdown(f'''
+            <div class="transparency-pill">
+                {SVG_ICONS["info"]}
+                <span>Assessment calculated using 4 core metrics + standard population baselines for omitted lab tests.</span>
+            </div>
+            ''', unsafe_allow_html=True)
 
         res_left, res_right = st.columns([3.2, 2.0], gap="large")
 
@@ -1723,7 +1850,7 @@ def main():
             flags.append("Age ≥ 45 years — Heightened age-related metabolic risk")
 
         ins = input_values.get("Insulin", 0)
-        if ins > 166:
+        if "Insulin" not in omitted_in_assessment and ins > 166:
             flags.append("Insulin > 166 µU/mL — Elevated fasting/post-load hyperinsulinemia")
 
         with res_left:
@@ -1776,6 +1903,7 @@ def main():
                 prob_diabetic=prob_diabetic,
                 prob_non_diabetic=prob_non_diabetic,
                 flags=flags,
+                omitted_features=omitted_in_assessment,
                 patient_id=patient_id_code,
             )
 
