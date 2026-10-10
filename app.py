@@ -19,6 +19,7 @@ import pickle
 import warnings
 from io import BytesIO
 from datetime import datetime
+import base64
 
 import numpy as np
 import pandas as pd
@@ -764,6 +765,130 @@ div[data-testid="stExpander"] details summary {
     color: #1C1C1E !important;
     padding: 0.65rem 0.95rem !important;
 }
+
+/* ── Hide Broken Material Text Ligatures (Enforce Apple SVG Icons) ── */
+span[data-testid="stIconMaterial"],
+[data-testid="stIconMaterial"] {
+    display: none !important;
+}
+
+/* ── Apple SF-Style Expander Chevron & Smooth Rotation ───── */
+.apple-expander-chevron {
+    width: 18px;
+    height: 18px;
+    stroke: currentColor;
+    stroke-width: 2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    color: #007AFF;
+    transform: rotate(0deg);
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    display: inline-block;
+    vertical-align: middle;
+    margin-right: 8px;
+    flex-shrink: 0;
+}
+div[data-testid="stExpander"] details[open] .apple-expander-chevron {
+    transform: rotate(180deg) !important;
+}
+
+/* ── Developer Sidebar Toggle (Apple SF-Style Double Chevrons) ── */
+button[data-testid="stExpandSidebarButton"] {
+    background: rgba(255, 255, 255, 0.75) !important;
+    backdrop-filter: blur(24px) saturate(200%) !important;
+    -webkit-backdrop-filter: blur(24px) saturate(200%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.80) !important;
+    border-radius: 20px !important;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06), inset 0 1px 1px rgba(255, 255, 255, 0.8) !important;
+    color: #1C1C1E !important;
+    padding: 6px 14px 6px 10px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    cursor: pointer !important;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    margin-top: 4px !important;
+    margin-left: 4px !important;
+}
+button[data-testid="stExpandSidebarButton"]:hover {
+    background: rgba(255, 255, 255, 0.92) !important;
+    box-shadow: 0 6px 20px rgba(0, 122, 255, 0.18) !important;
+    transform: translateY(-1px) !important;
+}
+.apple-dev-toggle-label {
+    font-size: 0.80rem !important;
+    font-weight: 700 !important;
+    color: #1C1C1E !important;
+    letter-spacing: -0.01em !important;
+}
+.apple-sidebar-toggle-icon {
+    width: 18px;
+    height: 18px;
+    stroke: currentColor;
+    stroke-width: 2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    color: rgba(28, 28, 30, 0.75);
+    display: inline-block;
+    flex-shrink: 0;
+    transition: transform 0.2s ease;
+}
+div[data-testid="stSidebarCollapseButton"] {
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+div[data-testid="stSidebarCollapseButton"] button {
+    visibility: visible !important;
+    opacity: 1 !important;
+    background: rgba(255, 255, 255, 0.65) !important;
+    backdrop-filter: blur(20px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.75) !important;
+    border-radius: 12px !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important;
+    color: #1C1C1E !important;
+    padding: 6px 8px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+}
+div[data-testid="stSidebarCollapseButton"] button:hover {
+    background: rgba(255, 255, 255, 0.90) !important;
+    transform: translateX(-1px) !important;
+}
+
+/* ── Apple Toast Notification ───────────────────────────── */
+.apple-toast {
+    position: fixed;
+    bottom: 32px;
+    left: 50%;
+    transform: translateX(-50%) translateY(24px);
+    background: rgba(28, 28, 30, 0.90);
+    backdrop-filter: blur(28px) saturate(200%);
+    -webkit-backdrop-filter: blur(28px) saturate(200%);
+    color: #FFFFFF;
+    padding: 12px 24px;
+    border-radius: 9999px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.28), inset 0 1px 1px rgba(255, 255, 255, 0.25);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    z-index: 9999999;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.apple-toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -1402,9 +1527,130 @@ def inject_client_sync_engine():
                 });
             }
 
+
+            // ── RESTORE APPLE SF-STYLE ICONS & CHEVRONS ──
+            function updateAppleIcons() {
+                const rootDoc = window.parent.document || document;
+
+                // 1. Collapsed Developer Toggle Button
+                const expandBtn = rootDoc.querySelector('button[data-testid="stExpandSidebarButton"]');
+                if (expandBtn) {
+                    if (!expandBtn.querySelector('.apple-chevrons-right-icon')) {
+                        const rightSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                        rightSvg.setAttribute('viewBox', '0 0 24 24');
+                        rightSvg.setAttribute('class', 'apple-sidebar-toggle-icon apple-chevrons-right-icon');
+                        rightSvg.innerHTML = '<path d="M13 17l5-5-5-5M6 17l5-5-5-5"/>';
+
+                        let labelSpan = expandBtn.querySelector('.apple-dev-toggle-label');
+                        if (!labelSpan) {
+                            labelSpan = document.createElement('span');
+                            labelSpan.className = 'apple-dev-toggle-label';
+                            labelSpan.innerText = 'Developer';
+                        }
+                        expandBtn.appendChild(rightSvg);
+                        expandBtn.appendChild(labelSpan);
+                    }
+                }
+
+                // 2. Expanded Developer Collapse Button
+                const collapseBtn = rootDoc.querySelector('div[data-testid="stSidebarCollapseButton"] button');
+                if (collapseBtn) {
+                    if (!collapseBtn.querySelector('.apple-chevrons-left-icon')) {
+                        const leftSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                        leftSvg.setAttribute('viewBox', '0 0 24 24');
+                        leftSvg.setAttribute('class', 'apple-sidebar-toggle-icon apple-chevrons-left-icon');
+                        leftSvg.innerHTML = '<path d="M11 19l-7-7 7-7M18 19l-7-7 7-7"/>';
+                        collapseBtn.appendChild(leftSvg);
+                    }
+                }
+
+                // 3. Advanced Clinical Parameters Expander Dropdown Chevron
+                const expanders = rootDoc.querySelectorAll('div[data-testid="stExpander"]');
+                expanders.forEach(expander => {
+                    const summary = expander.querySelector('summary');
+                    if (!summary) return;
+                    if (!summary.querySelector('.apple-expander-chevron')) {
+                        const chevronSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                        chevronSvg.setAttribute('viewBox', '0 0 24 24');
+                        chevronSvg.setAttribute('class', 'apple-expander-chevron');
+                        chevronSvg.innerHTML = '<path d="M6 9l6 6 6-6"/>';
+
+                        const titleTarget = summary.querySelector('[data-testid="stMarkdownContainer"]') || summary;
+                        if (titleTarget.parentElement === summary) {
+                            summary.insertBefore(chevronSvg, titleTarget);
+                        } else {
+                            titleTarget.parentElement.insertBefore(chevronSvg, titleTarget);
+                        }
+                    }
+                });
+            }
+
+            // ── DIRECT CLIENT-SIDE BLOB DOWNLOAD & TOAST CONFIRMATION ──
+            function ensureToastContainer() {
+                const rootDoc = window.parent.document || document;
+                let toast = rootDoc.getElementById('apple-feedback-toast');
+                if (!toast) {
+                    toast = rootDoc.createElement('div');
+                    toast.id = 'apple-feedback-toast';
+                    toast.className = 'apple-toast';
+                    toast.innerHTML = `
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#34C759" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M20 6L9 17l-5-5"/>
+                        </svg>
+                        <span>Report successfully generated and saved to your Downloads</span>
+                    `;
+                    rootDoc.body.appendChild(toast);
+                }
+                return toast;
+            }
+
+            window.parent.showAppleToast = function(msg) {
+                const toast = ensureToastContainer();
+                if (msg) toast.querySelector('span').innerText = msg;
+                toast.classList.add('show');
+                clearTimeout(window.parent.__toastTimeout);
+                window.parent.__toastTimeout = setTimeout(() => {
+                    toast.classList.remove('show');
+                }, 3800);
+            };
+
+            window.parent.triggerDirectBlobDownload = function() {
+                const rootDoc = window.parent.document || document;
+                try {
+                    const b64 = window.parent.__currentPdfBase64;
+                    const filename = window.parent.__currentPdfFilename || 'Diabetes_Assessment_Report.pdf';
+                    if (b64) {
+                        const byteCharacters = atob(b64);
+                        const byteNumbers = new Array(byteCharacters.length);
+                        for (let i = 0; i < byteCharacters.length; i++) {
+                            byteNumbers[i] = byteCharacters.charCodeAt(i);
+                        }
+                        const byteArray = new Uint8Array(byteNumbers);
+                        const blob = new Blob([byteArray], { type: 'application/pdf' });
+                        const blobUrl = URL.createObjectURL(blob);
+                        const link = rootDoc.createElement('a');
+                        link.href = blobUrl;
+                        link.download = filename;
+                        link.style.display = 'none';
+                        rootDoc.body.appendChild(link);
+                        link.click();
+                        rootDoc.body.removeChild(link);
+                        setTimeout(() => URL.revokeObjectURL(blobUrl), 1500);
+                    }
+                } catch (err) {
+                    console.error('Direct PDF download error:', err);
+                }
+                window.parent.showAppleToast("Report successfully generated and saved to your Downloads");
+            };
+
             // Execute immediately and monitor DOM additions
             initDualInputSync();
-            setInterval(initDualInputSync, 350);
+            updateAppleIcons();
+            setInterval(() => {
+                initDualInputSync();
+                updateAppleIcons();
+            }, 300);
+
         })();
         </script>
         """,
@@ -1755,32 +2001,14 @@ def main():
     # ═══════════════════════════════════════════
     #  ASSESSMENT RESULTS & PDF REPORT EXPORT
     # ═══════════════════════════════════════════
+    if "has_run_prediction" not in st.session_state:
+        st.session_state["has_run_prediction"] = False
+    if "assessment_result" not in st.session_state:
+        st.session_state["assessment_result"] = None
+
     if predict_btn:
         st.session_state.predict_counter += 1
         current_run_id = st.session_state.predict_counter
-
-        # Target DOM anchor for scrolling
-        st.markdown('<div id="assessment-result-anchor" style="padding-top: 1rem;"></div>', unsafe_allow_html=True)
-
-        # Smooth auto-scroll hook
-        components.html(
-            f"""
-            <script>
-                (function() {{
-                    const runId = {current_run_id};
-                    setTimeout(function() {{
-                        const doc = window.parent.document;
-                        const el = doc.getElementById('assessment-result-anchor');
-                        if (el) {{
-                            el.scrollIntoView({{ behavior: 'smooth', block: 'start' }});
-                        }}
-                    }}, 120);
-                }})();
-            </script>
-            """,
-            height=0,
-            width=0,
-        )
 
         # Determine features that were omitted/imputed
         omitted_in_assessment = [f for f in ADVANCED_FEATURES if f in omitted_list]
@@ -1790,7 +2018,7 @@ def main():
             # Approach B: Dedicated 4-feature model routing
             core_row = {feat: input_values[feat] for feat in PRIMARY_FEATURES}
             patient_df = pd.DataFrame([core_row], columns=PRIMARY_FEATURES)
-            prediction = pipeline_4.predict(patient_df)[0]
+            prediction = int(pipeline_4.predict(patient_df)[0])
             if hasattr(pipeline_4, "predict_proba"):
                 probs = pipeline_4.predict_proba(patient_df)[0]
             else:
@@ -1802,7 +2030,7 @@ def main():
                 if zf in row and row[zf] == 0:
                     row[zf] = np.nan
             patient_df = pd.DataFrame([row], columns=ALL_FEATURES)
-            prediction = pipeline_8.predict(patient_df)[0]
+            prediction = int(pipeline_8.predict(patient_df)[0])
             if hasattr(pipeline_8, "predict_proba"):
                 probs = pipeline_8.predict_proba(patient_df)[0]
             else:
@@ -1810,20 +2038,6 @@ def main():
 
         prob_diabetic     = float(probs[1])
         prob_non_diabetic = float(probs[0])
-
-        st.markdown('<div class="section-label" style="margin-top: 1.4rem;">RISK STRATIFICATION & FINDINGS</div>', unsafe_allow_html=True)
-        st.markdown("### Assessment Findings")
-
-        # ── Transparency Status Pill (Client Disclosure) ──
-        if omitted_in_assessment:
-            st.markdown(f'''
-            <div class="transparency-pill">
-                {SVG_ICONS["info"]}
-                <span>Assessment calculated using 4 core metrics + standard population baselines for omitted lab tests.</span>
-            </div>
-            ''', unsafe_allow_html=True)
-
-        res_left, res_right = st.columns([3.2, 2.0], gap="large")
 
         # Compile clinical risk factor flags
         flags = []
@@ -1852,6 +2066,86 @@ def main():
         ins = input_values.get("Insulin", 0)
         if "Insulin" not in omitted_in_assessment and ins > 166:
             flags.append("Insulin > 166 µU/mL — Elevated fasting/post-load hyperinsulinemia")
+
+        patient_id_code = f"PT-{datetime.now().strftime('%Y%m%d')}-8841"
+        pdf_bytes = generate_clinical_pdf(
+            patient_data=input_values,
+            prediction=prediction,
+            prob_diabetic=prob_diabetic,
+            prob_non_diabetic=prob_non_diabetic,
+            flags=flags,
+            omitted_features=omitted_in_assessment,
+            patient_id=patient_id_code,
+        )
+
+        b64_pdf = base64.b64encode(pdf_bytes).decode('utf-8')
+        date_stamp = datetime.now().strftime('%Y%m%d')
+        report_filename = f"Diabetes_Assessment_Report_{date_stamp}.pdf"
+
+        st.session_state["has_run_prediction"] = True
+        st.session_state["assessment_result"] = {
+            "prediction": prediction,
+            "prob_diabetic": prob_diabetic,
+            "prob_non_diabetic": prob_non_diabetic,
+            "flags": flags,
+            "omitted_in_assessment": omitted_in_assessment,
+            "patient_id_code": patient_id_code,
+            "pdf_bytes": pdf_bytes,
+            "b64_pdf": b64_pdf,
+            "filename": report_filename,
+            "should_scroll": True,
+            "run_id": current_run_id,
+        }
+
+    # ── PERSISTENT ASSESSMENT FINDINGS & CLINICAL PDF EXPORT ──
+    if st.session_state.get("has_run_prediction", False) and st.session_state.get("assessment_result") is not None:
+        res = st.session_state["assessment_result"]
+        prediction = res["prediction"]
+        prob_diabetic = res["prob_diabetic"]
+        prob_non_diabetic = res["prob_non_diabetic"]
+        flags = res["flags"]
+        omitted_in_assessment = res["omitted_in_assessment"]
+        patient_id_code = res["patient_id_code"]
+        pdf_bytes = res["pdf_bytes"]
+        b64_pdf = res["b64_pdf"]
+        report_filename = res["filename"]
+
+        # Target DOM anchor for scrolling
+        st.markdown('<div id="assessment-result-anchor" style="padding-top: 1rem;"></div>', unsafe_allow_html=True)
+
+        if res.get("should_scroll", False):
+            res["should_scroll"] = False
+            components.html(
+                f"""
+                <script>
+                    (function() {{
+                        setTimeout(function() {{
+                            const doc = window.parent.document;
+                            const el = doc.getElementById('assessment-result-anchor');
+                            if (el) {{
+                                el.scrollIntoView({{ behavior: 'smooth', block: 'start' }});
+                            }}
+                        }}, 120);
+                    }})();
+                </script>
+                """,
+                height=0,
+                width=0,
+            )
+
+        st.markdown('<div class="section-label" style="margin-top: 1.4rem;">RISK STRATIFICATION & FINDINGS</div>', unsafe_allow_html=True)
+        st.markdown("### Assessment Findings")
+
+        # ── Transparency Status Pill (Client Disclosure) ──
+        if omitted_in_assessment:
+            st.markdown(f'''
+            <div class="transparency-pill">
+                {SVG_ICONS["info"]}
+                <span>Assessment calculated using 4 core metrics + standard population baselines for omitted lab tests.</span>
+            </div>
+            ''', unsafe_allow_html=True)
+
+        res_left, res_right = st.columns([3.2, 2.0], gap="large")
 
         with res_left:
             if prob_diabetic >= 0.65:
@@ -1896,24 +2190,46 @@ def main():
                 ''', unsafe_allow_html=True)
 
             # ── 4. PDF CLINICAL REPORT GENERATION & DOWNLOAD BUTTON ──
-            patient_id_code = f"PT-{datetime.now().strftime('%Y%m%d')}-8841"
-            pdf_bytes = generate_clinical_pdf(
-                patient_data=input_values,
-                prediction=prediction,
-                prob_diabetic=prob_diabetic,
-                prob_non_diabetic=prob_non_diabetic,
-                flags=flags,
-                omitted_features=omitted_in_assessment,
-                patient_id=patient_id_code,
-            )
-
             st.markdown('<div style="margin-top: 1.2rem;"></div>', unsafe_allow_html=True)
             st.download_button(
-                label="Download / Print Clinical Report (PDF)",
+                label="📄 Download Assessment Report (PDF)",
                 data=pdf_bytes,
-                file_name=f"Clinical_Diabetes_Assessment_{patient_id_code}.pdf",
+                file_name=report_filename,
                 mime="application/pdf",
                 use_container_width=True,
+                key="download_assessment_report_pdf"
+            )
+
+            # Direct client-side blob download trigger & toast confirmation hook
+            components.html(
+                f"""
+                <script>
+                    (function() {{
+                        const rootDoc = window.parent.document || document;
+                        window.parent.__currentPdfBase64 = "{b64_pdf}";
+                        window.parent.__currentPdfFilename = "{report_filename}";
+
+                        function attachDownloadHook() {{
+                            const dlContainer = rootDoc.querySelector('div[data-testid="stDownloadButton"]');
+                            if (!dlContainer) return;
+                            const btn = dlContainer.querySelector('button');
+                            if (btn && !btn.dataset.appleDownloadBound) {{
+                                btn.dataset.appleDownloadBound = "true";
+                                btn.addEventListener('click', function(e) {{
+                                    if (window.parent.triggerDirectBlobDownload) {{
+                                        window.parent.triggerDirectBlobDownload();
+                                    }}
+                                }}, false);
+                            }}
+                        }}
+                        attachDownloadHook();
+                        setTimeout(attachDownloadHook, 120);
+                        setTimeout(attachDownloadHook, 400);
+                    }})();
+                </script>
+                """,
+                height=0,
+                width=0,
             )
 
         with res_right:
