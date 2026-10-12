@@ -92,14 +92,14 @@ FEATURE_META = {
         "min": 70, "max": 200, "default": 120, "step": 1,
         "unit": "mm Hg", "type": int, "primary": True,
         "icon": "heart_pulse", "badge": "icon-badge-crimson",
-        "norm_desc": "Normal Target: < 120 mm Hg",
+        "norm_desc": "Normal Baseline: < 120 mm Hg",
     },
     "BloodPressure": {
-        "label": "Blood Pressure (Diastolic - Model Feature)",
+        "label": "Diastolic Blood Pressure (DBP)",
         "min": 40, "max": 140, "default": 70, "step": 1,
         "unit": "mm Hg", "type": int, "primary": True,
         "icon": "heart_pulse", "badge": "icon-badge-crimson",
-        "norm_desc": "Normal Target: < 80 mm Hg",
+        "norm_desc": "Normal Baseline: < 80 mm Hg",
     },
     "BMI": {
         "label": "Body Mass Index (BMI)",
@@ -421,8 +421,7 @@ div[data-testid="stSlider"] div[data-rac] > div[class*="efbyxod5"],
 div[data-testid="stSlider"] div[data-baseweb="slider"] > div {
     height: 6px !important;
     border-radius: 9999px !important;
-    background-color: #E5E5EA !important;
-    background-image: none !important;
+    background: linear-gradient(to right, #007AFF 0%, #007AFF var(--slider-fill, var(--progress, 0%)), #E5E5EA var(--slider-fill, var(--progress, 0%)), #E5E5EA 100%) !important;
     overflow: hidden !important; /* Clips all fills inside smooth capsule */
     position: relative !important;
     top: calc(50% - 3px) !important;
@@ -437,7 +436,7 @@ div[data-testid="stSlider"] div[class*="efbyxod5"]::before {
     top: 0 !important;
     left: 0 !important;
     bottom: 0 !important;
-    width: var(--slider-fill, 50%) !important;
+    width: var(--slider-fill, var(--progress, 0%)) !important;
     background: #007AFF !important;
     border-radius: 9999px !important;
     border-top-right-radius: 9999px !important;
@@ -640,8 +639,9 @@ div[data-testid="stNumberInput"] button:active {
     border: 1px solid rgba(255, 59, 48, 0.35);
 }
 
-/* ── Primary Action Button ──────────────────────────────── */
-div[data-testid="stButton"] > button {
+/* ── Action Buttons (Primary & Secondary Apple Pills) ───── */
+div[data-testid="stButton"] > button[kind="primary"],
+button[data-testid="baseButton-primary"] {
     background: linear-gradient(135deg, #007AFF 0%, #0056B3 100%) !important;
     color: #FFFFFF !important;
     font-weight: 700 !important;
@@ -652,13 +652,34 @@ div[data-testid="stButton"] > button {
     box-shadow: 0 4px 16px rgba(0, 122, 255, 0.35) !important;
     transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
-div[data-testid="stButton"] > button:hover {
+div[data-testid="stButton"] > button[kind="primary"]:hover,
+button[data-testid="baseButton-primary"]:hover {
     transform: translateY(-2px) !important;
     box-shadow: 0 8px 24px rgba(0, 122, 255, 0.45) !important;
     background: linear-gradient(135deg, #0A84FF 0%, #0062D2 100%) !important;
 }
-div[data-testid="stButton"] > button:active {
-    transform: translateY(0px) !important;
+div[data-testid="stButton"] > button[kind="secondary"],
+button[data-testid="baseButton-secondary"] {
+    background: rgba(255, 255, 255, 0.65) !important;
+    backdrop-filter: blur(16px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
+    color: #1C1C1E !important;
+    font-weight: 600 !important;
+    font-size: 0.77rem !important;
+    border-radius: 10px !important;
+    border: 1px solid rgba(255, 255, 255, 0.75) !important;
+    padding: 0.32rem 0.5rem !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04) !important;
+    white-space: nowrap !important;
+    transition: all 0.18s ease !important;
+}
+div[data-testid="stButton"] > button[kind="secondary"]:hover,
+button[data-testid="baseButton-secondary"]:hover {
+    background: #FFFFFF !important;
+    color: #007AFF !important;
+    border-color: rgba(0, 122, 255, 0.45) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 12px rgba(0, 122, 255, 0.15) !important;
 }
 
 /* ── PDF Download Button ────────────────────────────────── */
@@ -889,19 +910,24 @@ div[data-testid="stExpander"] details[open] .apple-expander-chevron {
     transform: rotate(180deg) !important;
 }
 
-/* ── Developer Sidebar Toggle (Apple SF-Style Double Chevrons) ── */
+/* ── Developer Sidebar Toggle (Compact Apple Pill) ── */
 button[data-testid="stExpandSidebarButton"] {
     background: rgba(255, 255, 255, 0.75) !important;
     backdrop-filter: blur(24px) saturate(200%) !important;
     -webkit-backdrop-filter: blur(24px) saturate(200%) !important;
     border: 1px solid rgba(255, 255, 255, 0.80) !important;
-    border-radius: 20px !important;
+    border-radius: 9999px !important;
     box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06), inset 0 1px 1px rgba(255, 255, 255, 0.8) !important;
     color: #1C1C1E !important;
-    padding: 6px 14px 6px 10px !important;
+    width: auto !important;
+    max-width: fit-content !important;
+    height: auto !important;
+    min-height: unset !important;
+    padding: 4px 11px !important;
     display: inline-flex !important;
     align-items: center !important;
-    gap: 6px !important;
+    justify-content: center !important;
+    gap: 4px !important;
     cursor: pointer !important;
     transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
     margin-top: 4px !important;
@@ -909,20 +935,26 @@ button[data-testid="stExpandSidebarButton"] {
 }
 button[data-testid="stExpandSidebarButton"]:hover {
     background: rgba(255, 255, 255, 0.92) !important;
-    box-shadow: 0 6px 20px rgba(0, 122, 255, 0.18) !important;
+    box-shadow: 0 6px 18px rgba(0, 122, 255, 0.18) !important;
     transform: translateY(-1px) !important;
 }
+button[data-testid="stExpandSidebarButton"] > svg:not(.apple-sidebar-toggle-icon) {
+    display: none !important;
+}
 .apple-dev-toggle-label {
-    font-size: 0.80rem !important;
+    font-size: 0.78rem !important;
     font-weight: 700 !important;
     color: #1C1C1E !important;
     letter-spacing: -0.01em !important;
+    line-height: 1 !important;
+    margin: 0 !important;
+    padding: 0 !important;
 }
 .apple-sidebar-toggle-icon {
-    width: 18px;
-    height: 18px;
+    width: 15px !important;
+    height: 15px !important;
     stroke: currentColor;
-    stroke-width: 2;
+    stroke-width: 2.2;
     fill: none;
     stroke-linecap: round;
     stroke-linejoin: round;
@@ -930,6 +962,7 @@ button[data-testid="stExpandSidebarButton"]:hover {
     display: inline-block;
     flex-shrink: 0;
     transition: transform 0.2s ease;
+    margin: 0 !important;
 }
 div[data-testid="stSidebarCollapseButton"] {
     visibility: visible !important;
@@ -945,7 +978,7 @@ div[data-testid="stSidebarCollapseButton"] button {
     border-radius: 12px !important;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important;
     color: #1C1C1E !important;
-    padding: 6px 8px !important;
+    padding: 5px 8px !important;
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
@@ -955,6 +988,47 @@ div[data-testid="stSidebarCollapseButton"] button {
 div[data-testid="stSidebarCollapseButton"] button:hover {
     background: rgba(255, 255, 255, 0.90) !important;
     transform: translateX(-1px) !important;
+}
+
+/* ── Apple Segmented Control (stRadio Horizontal Pill) ── */
+div[data-testid="stRadio"] > div {
+    background: rgba(118, 118, 128, 0.12) !important;
+    backdrop-filter: blur(20px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+    border-radius: 12px !important;
+    padding: 3px !important;
+    display: inline-flex !important;
+    flex-direction: row !important;
+    gap: 3px !important;
+    border: 1px solid rgba(255, 255, 255, 0.50) !important;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+div[data-testid="stRadio"] label {
+    flex: 1 1 0 !important;
+    margin: 0 !important;
+    padding: 6px 12px !important;
+    border-radius: 9px !important;
+    font-size: 0.81rem !important;
+    font-weight: 600 !important;
+    color: #3A3A3C !important;
+    cursor: pointer !important;
+    transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+}
+div[data-testid="stRadio"] label > div:first-child {
+    display: none !important;
+}
+div[data-testid="stRadio"] label:has(input:checked),
+div[data-testid="stRadio"] label[data-checked="true"] {
+    background: #FFFFFF !important;
+    color: #007AFF !important;
+    font-weight: 700 !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12), 0 0.5px 1.5px rgba(0, 0, 0, 0.08) !important;
 }
 
 /* ── Apple Toast Notification ───────────────────────────── */
@@ -1021,7 +1095,7 @@ class NumberedCanvas(canvas.Canvas):
         self.restoreState()
 
 
-def generate_lifestyle_recommendations(prob_diabetic, input_values, flags):
+def generate_lifestyle_recommendations(prob_diabetic, input_values, flags, is_detailed_bp=True):
     """
     Dynamically generates personalized lifestyle, nutrition, physical activity,
     weight & vitals management, and medical follow-up recommendations based on:
@@ -1029,7 +1103,7 @@ def generate_lifestyle_recommendations(prob_diabetic, input_values, flags):
     2. Specific biomarker triggers (Glucose > 100, BMI >= 25, SBP >= 130 / DBP >= 80, Age >= 45)
     """
     g = input_values.get("Glucose", 100)
-    sbp = input_values.get("SystolicBP", 120)
+    sbp = input_values.get("SystolicBP", 120) if is_detailed_bp else None
     dbp = input_values.get("BloodPressure", 70)
     bmi = input_values.get("BMI", 22.0)
     age = input_values.get("Age", 30)
@@ -1062,8 +1136,12 @@ def generate_lifestyle_recommendations(prob_diabetic, input_values, flags):
         highlights.append({"cat": "Activity", "text": "Post-Meal 15m Walks & Resistance", "badge": "badge-danger" if is_high else "badge-amber"})
         if bmi >= 25:
             highlights.append({"cat": "Vitals", "text": "Target 5%–7% Weight Reduction", "badge": "badge-danger" if bmi >= 30 else "badge-amber"})
-        if sbp >= 130 or dbp >= 80:
-            highlights.append({"cat": "Vitals", "text": "DASH Diet & Sodium < 2.3g/day", "badge": "badge-danger" if sbp >= 140 else "badge-amber"})
+        if is_detailed_bp and sbp is not None:
+            if sbp >= 130 or dbp >= 80:
+                highlights.append({"cat": "Vitals", "text": "DASH Diet & Sodium < 2.3g/day", "badge": "badge-danger" if sbp >= 140 else "badge-amber"})
+        elif not is_detailed_bp:
+            if dbp >= 80:
+                highlights.append({"cat": "Vitals", "text": "DASH Diet & Sodium < 2.3g/day", "badge": "badge-danger" if dbp >= 90 else "badge-amber"})
         highlights.append({"cat": "Clinical", "text": "Confirmatory HbA1c Lab Panel", "badge": "badge-danger" if is_high else "badge-amber"})
 
     nutrition_items = []
@@ -1076,7 +1154,7 @@ def generate_lifestyle_recommendations(prob_diabetic, input_values, flags):
         nutrition_items.append("Prioritize soluble dietary fiber (cruciferous vegetables, chia seeds, lentils, legumes) to delay gastric emptying and flatten glycemic excursions.")
         if g >= 100:
             nutrition_items.append("Practice low-glycemic meal sequencing: consume dietary fiber and lean proteins prior to starches to significantly reduce post-meal insulin spikes.")
-        if sbp >= 130 or dbp >= 80:
+        if (is_detailed_bp and sbp is not None and (sbp >= 130 or dbp >= 80)) or (not is_detailed_bp and dbp >= 80):
             nutrition_items.append("Adopt DASH dietary principles: increase potassium-rich whole foods and strictly restrict daily sodium to < 2,300 mg (ideally < 1,500 mg if hypertensive).")
 
     activity_items = []
@@ -1090,18 +1168,28 @@ def generate_lifestyle_recommendations(prob_diabetic, input_values, flags):
             activity_items.append("Focus on low-impact, joint-friendly metabolic conditioning (e.g., incline treadmill walking, elliptical, swimming, pilates) to build muscular endurance.")
 
     vitals_items = []
-    if is_low and bmi < 25 and sbp < 120 and dbp < 80:
+    bp_elevated = (is_detailed_bp and sbp is not None and (sbp >= 130 or dbp >= 80)) or (not is_detailed_bp and dbp >= 80)
+    if is_low and bmi < 25 and not bp_elevated:
         vitals_items.append("Sustain current body composition with balanced energy intake and consistent restorative sleep (7–9 hours nightly) to maintain cortisol balance.")
-        vitals_items.append("Periodically self-monitor blood pressure to ensure systolic remains < 120 mm Hg and diastolic < 80 mm Hg.")
+        if is_detailed_bp:
+            vitals_items.append("Periodically self-monitor blood pressure to ensure systolic remains < 120 mm Hg and diastolic < 80 mm Hg.")
+        else:
+            vitals_items.append("Periodically self-monitor blood pressure to ensure diastolic remains < 80 mm Hg.")
     else:
         if bmi >= 25:
             vitals_items.append("Establish a moderate caloric deficit (300–500 kcal/day) targeting a gradual 5%–7% reduction in total body weight, which clinically improves beta-cell function.")
         else:
             vitals_items.append("Maintain lean body mass and prevent visceral fat deposition through balanced macronutrient distribution and adequate protein (1.2–1.6 g/kg).")
-        if sbp >= 130 or dbp >= 80:
-            vitals_items.append(f"Monitor and log seated blood pressure twice daily; current reading ({sbp}/{dbp} mm Hg) indicates elevated vascular tone requiring sodium and stress modulation.")
+        if bp_elevated:
+            if is_detailed_bp and sbp is not None:
+                vitals_items.append(f"Monitor and log seated blood pressure twice daily; current reading ({sbp}/{dbp} mm Hg) indicates elevated vascular tone requiring sodium and stress modulation.")
+            else:
+                vitals_items.append(f"Monitor and log seated blood pressure twice daily; current diastolic reading ({dbp} mm Hg) indicates elevated diastolic vascular tone requiring sodium and stress modulation.")
         else:
-            vitals_items.append("Maintain cardiovascular tracking; keep systolic blood pressure < 120 mm Hg and diastolic < 80 mm Hg through active lifestyle measures.")
+            if is_detailed_bp:
+                vitals_items.append("Maintain cardiovascular tracking; keep systolic blood pressure < 120 mm Hg and diastolic < 80 mm Hg through active lifestyle measures.")
+            else:
+                vitals_items.append("Maintain cardiovascular tracking; keep diastolic blood pressure < 80 mm Hg through active lifestyle measures.")
 
     monitoring_items = []
     if is_low:
@@ -1110,8 +1198,10 @@ def generate_lifestyle_recommendations(prob_diabetic, input_values, flags):
     else:
         monitoring_items.append("Schedule an in-person clinical consultation with your primary healthcare provider to review this risk assessment and discuss confirmatory lab testing.")
         monitoring_items.append("Request an official diagnostic laboratory Glycated Hemoglobin (HbA1c) test and Fasting Plasma Glucose (FPG) panel to definitively evaluate glycemic control.")
-        if sbp >= 140 or dbp >= 90:
+        if is_detailed_bp and sbp is not None and (sbp >= 140 or dbp >= 90):
             monitoring_items.append("Consult your physician regarding formal clinical staging for hypertension and evaluation of cardiovascular risk markers.")
+        elif not is_detailed_bp and dbp >= 90:
+            monitoring_items.append("Consult your physician regarding formal clinical staging for diastolic hypertension and evaluation of cardiovascular risk markers.")
         if age >= 45:
             monitoring_items.append("Given patient age (≥ 45), adhere to ADA clinical guidelines recommending systematic multi-system metabolic and cardiovascular surveillance.")
 
@@ -1153,7 +1243,7 @@ def generate_lifestyle_recommendations(prob_diabetic, input_values, flags):
     }
 
 
-def generate_clinical_pdf(patient_data, prediction, prob_diabetic, prob_non_diabetic, flags, omitted_features=None, patient_id="PT-2026-8841", recommendations=None):
+def generate_clinical_pdf(patient_data, prediction, prob_diabetic, prob_non_diabetic, flags, omitted_features=None, patient_id="PT-2026-8841", recommendations=None, is_detailed_bp=True):
     """
     Generate a print-ready clinical screening report adhering strictly to
     standard hospital/clinical documentation standards.
@@ -1161,7 +1251,7 @@ def generate_clinical_pdf(patient_data, prediction, prob_diabetic, prob_non_diab
     if omitted_features is None:
         omitted_features = []
     if recommendations is None:
-        recommendations = generate_lifestyle_recommendations(prob_diabetic, patient_data, flags)
+        recommendations = generate_lifestyle_recommendations(prob_diabetic, patient_data, flags, is_detailed_bp=is_detailed_bp)
 
     buffer = BytesIO()
     doc = SimpleDocTemplate(
@@ -1288,8 +1378,8 @@ def generate_clinical_pdf(patient_data, prediction, prob_diabetic, prob_non_diab
     ]
     ref_norms = {
         "Glucose": ("mg/dL", "70 – 99 mg/dL"),
-        "SystolicBP": ("mm Hg", "< 120 mm Hg (systolic)"),
-        "BloodPressure": ("mm Hg", "< 80 mm Hg (diastolic)"),
+        "SystolicBP": ("mm Hg", "< 120 mm Hg (SBP)"),
+        "BloodPressure": ("mm Hg", "< 80 mm Hg (DBP)"),
         "BMI": ("kg/m²", "18.5 – 24.9 kg/m²"),
         "Age": ("years", "18 – 44 years"),
         "Insulin": ("µU/mL", "16 – 166 µU/mL"),
@@ -1297,7 +1387,10 @@ def generate_clinical_pdf(patient_data, prediction, prob_diabetic, prob_non_diab
         "Pregnancies": ("count", "0 – 2"),
         "DiabetesPedigreeFunction": ("score", "< 0.50"),
     }
-    DISPLAY_REPORT_FEATURES = ["Glucose", "SystolicBP", "BloodPressure", "BMI", "Age", "Insulin", "SkinThickness", "Pregnancies", "DiabetesPedigreeFunction"]
+    if is_detailed_bp:
+        DISPLAY_REPORT_FEATURES = ["Glucose", "SystolicBP", "BloodPressure", "BMI", "Age", "Insulin", "SkinThickness", "Pregnancies", "DiabetesPedigreeFunction"]
+    else:
+        DISPLAY_REPORT_FEATURES = ["Glucose", "BloodPressure", "BMI", "Age", "Insulin", "SkinThickness", "Pregnancies", "DiabetesPedigreeFunction"]
     for k in DISPLAY_REPORT_FEATURES:
         if k in patient_data:
             v = patient_data[k]
@@ -1513,10 +1606,12 @@ def compute_benchmark_metrics(df):
 def _fig_to_buf(fig):
     buf = BytesIO()
     fig.savefig(buf, format="png", bbox_inches="tight", dpi=150, transparent=True)
-    buf.seek(0)
+    raw_bytes = buf.getvalue()
+    buf.close()
     plt.close(fig)
-    return buf
+    return raw_bytes
 
+@st.cache_data
 def plot_confusion_matrix(y_true, y_pred, model_name):
     cm = confusion_matrix(y_true, y_pred)
     fig, ax = plt.subplots(figsize=(4.0, 3.2))
@@ -1539,12 +1634,13 @@ def plot_confusion_matrix(y_true, y_pred, model_name):
     plt.tight_layout()
     return _fig_to_buf(fig)
 
-def plot_feature_importance(pipeline, feature_names):
+@st.cache_data
+def plot_feature_importance(_pipeline, feature_names):
     fig, ax = plt.subplots(figsize=(4.8, 3.2))
     fig.patch.set_facecolor('#F2F2F7')
     ax.set_facecolor('#F2F2F7')
 
-    clf = pipeline.named_steps.get("classifier", None)
+    clf = _pipeline.named_steps.get("classifier", None)
     if hasattr(clf, "feature_importances_"):
         imps = clf.feature_importances_
         title = "Random Forest Feature Importance"
@@ -1575,6 +1671,7 @@ def plot_feature_importance(pipeline, feature_names):
     plt.tight_layout()
     return _fig_to_buf(fig)
 
+@st.cache_data
 def plot_risk_gauge(prob_diabetic):
     fig, ax = plt.subplots(figsize=(4.6, 2.3), subplot_kw={"projection": "polar"})
     fig.patch.set_facecolor('#F2F2F7')
@@ -1621,8 +1718,10 @@ def plot_risk_gauge(prob_diabetic):
 # ─────────────────────────────────────────────
 #  PRESET STATE HANDLER
 # ─────────────────────────────────────────────
-def apply_preset(preset_name):
-    """Apply clinical preset values to all session states."""
+def apply_preset_callback(preset_name):
+    """Apply clinical preset values before widgets render without causing rerun loops."""
+    st.session_state["profile_selection"] = preset_name
+    st.session_state["preset_selector"] = preset_name
     if preset_name in PRESETS and PRESETS[preset_name] is not None:
         values = PRESETS[preset_name]
         for f, v in values.items():
@@ -1636,24 +1735,104 @@ def apply_preset(preset_name):
             st.session_state[f"skip_{f}"] = False
         st.session_state["toggle_advanced_biomarkers"] = True
 
+def on_preset_selector_change():
+    """Callback triggered when the preset selectbox changes."""
+    selected = st.session_state.get("preset_selector", "Custom Profile")
+    apply_preset_callback(selected)
+
+def on_custom_input_change(feat, source):
+    """
+    Unidirectional callback for all sliders and number inputs.
+    Synchronizes twin inputs and resets active profile to Custom Profile immediately.
+    """
+    st.session_state["profile_selection"] = "Custom Profile"
+    st.session_state["preset_selector"] = "Custom Profile"
+    if source == "slider":
+        st.session_state[f"num_{feat}"] = st.session_state[f"slider_{feat}"]
+    elif source == "num":
+        st.session_state[f"slider_{feat}"] = st.session_state[f"num_{feat}"]
+
 # ─────────────────────────────────────────────
 #  CLIENT-SIDE DUAL-INPUT SYNC ENGINE (JS)
 # ─────────────────────────────────────────────
 def inject_client_sync_engine():
     """
-    Zero-Latency Dual-Input Synchronization & Stepper Buffer Engine.
+    Zero-Latency Dual-Input Synchronization & Dynamic Track Fill Engine.
     Runs in the browser DOM to provide:
-      1. 0 ms perceptible latency on every slider drag tick.
-      2. Stepper '+' / '-' decoupling with a fast local state buffer,
+      1. Centralized updateSliderProgress recalculating dynamic CSS variable
+         (--progress and --slider-fill) and background gradient immediately on preset updates.
+      2. 0 ms perceptible latency on every slider drag tick without blocking reruns.
+      3. Stepper '+' / '-' decoupling with a fast local state buffer,
          preventing dropped clicks and UI freezes.
-      3. Smooth capsule progress bar geometry under the translucent thumb.
+      4. Seamless capsule progress bar geometry under the translucent thumb.
+      5. Compact Apple-style pill Developer drawer toggle.
     """
     components.html(
         """
         <script>
         (function() {
+            const rootDoc = window.parent.document || document;
+
+            // ── CENTRALIZED SLIDER TRACK PROGRESS CALCULATOR ──
+            function updateSliderProgress(sliderElem) {
+                if (!sliderElem) return;
+                const rangeInput = sliderElem.querySelector('input[type="range"]');
+                const thumb = sliderElem.querySelector('div[class*="efbyxod3"]') || sliderElem.querySelector('[role="slider"]');
+                const track = sliderElem.querySelector('div[class*="efbyxod5"]') || sliderElem.querySelector('div[data-baseweb="slider"] > div') || sliderElem.querySelector('div[data-rac] > div');
+
+                let min = 0, max = 100, val = 50;
+                if (rangeInput) {
+                    min = parseFloat(rangeInput.min) || 0;
+                    max = parseFloat(rangeInput.max) || 100;
+                    val = parseFloat(rangeInput.value) || 0;
+                } else if (thumb) {
+                    min = parseFloat(thumb.getAttribute('aria-valuemin')) || 0;
+                    max = parseFloat(thumb.getAttribute('aria-valuemax')) || 100;
+                    val = parseFloat(thumb.getAttribute('aria-valuenow')) || 0;
+                }
+
+                const pct = Math.max(0, Math.min(100, ((val - min) / (max - min)) * 100));
+                const pctStr = pct.toFixed(2) + '%';
+
+                sliderElem.style.setProperty('--progress', pctStr);
+                sliderElem.style.setProperty('--slider-fill', pctStr);
+
+                if (track) {
+                    track.style.setProperty('--progress', pctStr);
+                    track.style.setProperty('--slider-fill', pctStr);
+                    track.style.background = 'linear-gradient(to right, #007AFF 0%, #007AFF ' + pctStr + ', #E5E5EA ' + pctStr + ', #E5E5EA 100%)';
+                }
+                if (thumb && !thumb.dataset.userDragging) {
+                    thumb.style.left = pctStr;
+                }
+            }
+
+            function updateAllSlidersProgress() {
+                const sliders = rootDoc.querySelectorAll('div[data-testid="stSlider"]');
+                sliders.forEach(s => updateSliderProgress(s));
+            }
+
+            function markProfileAsCustom() {
+                const badge = rootDoc.getElementById('active-profile-badge');
+                if (badge && badge.innerText !== 'Custom Profile') {
+                    badge.innerText = 'Custom Profile';
+                    badge.className = 'range-badge badge-amber';
+                }
+            }
+
+            function setReactInputValue(input, val) {
+                const lastVal = input.value;
+                input.value = val;
+                const tracker = input._valueTracker;
+                if (tracker) {
+                    tracker.setValue(lastVal);
+                }
+                input.dispatchEvent(new Event('input', { bubbles: true }));
+                input.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+
+            // ── ZERO-LATENCY DUAL-INPUT SYNCHRONIZATION & STEPPER BUFFER ──
             function initDualInputSync() {
-                const rootDoc = window.parent.document || document;
                 const sliders = Array.from(rootDoc.querySelectorAll('div[data-testid="stSlider"]'));
                 const numbers = Array.from(rootDoc.querySelectorAll('div[data-testid="stNumberInput"]'));
 
@@ -1662,7 +1841,10 @@ def inject_client_sync_engine():
                 const nativeInputSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
 
                 sliders.forEach(sliderElem => {
-                    if (sliderElem.dataset.syncBound === "true") return;
+                    if (sliderElem.dataset.syncBound === "true") {
+                        updateSliderProgress(sliderElem);
+                        return;
+                    }
 
                     const labelElem = sliderElem.querySelector('label') || sliderElem.querySelector('[data-testid="stWidgetLabel"]');
                     const labelText = labelElem ? labelElem.innerText.trim() : '';
@@ -1701,14 +1883,18 @@ def inject_client_sync_engine():
                     function updatePillVisuals(val, source) {
                         const clamped = Math.max(min, Math.min(max, val));
                         const pct = ((clamped - min) / (max - min)) * 100;
+                        const pctStr = pct.toFixed(2) + '%';
 
-                        // Capsule progress bar fill
+                        sliderElem.style.setProperty('--progress', pctStr);
+                        sliderElem.style.setProperty('--slider-fill', pctStr);
+
                         if (track) {
-                            track.style.setProperty('--slider-fill', pct + '%');
+                            track.style.setProperty('--progress', pctStr);
+                            track.style.setProperty('--slider-fill', pctStr);
+                            track.style.background = 'linear-gradient(to right, #007AFF 0%, #007AFF ' + pctStr + ', #E5E5EA ' + pctStr + ', #E5E5EA 100%)';
                         }
-                        // Pill thumb position
                         if (thumb) {
-                            thumb.style.left = pct + '%';
+                            thumb.style.left = pctStr;
                         }
 
                         // Sync text box on slider movement
@@ -1728,8 +1914,9 @@ def inject_client_sync_engine():
                     const initialVal = parseFloat(numInput.value || rangeInput.value);
                     updatePillVisuals(initialVal, 'init');
 
-                    // 1. INSTANT CLIENT-SIDE SLIDER DRAG SYNCHRONIZATION (0 ms)
+                    // 1. Instant client-side slider drag synchronization (0 ms)
                     rangeInput.addEventListener('input', (e) => {
+                        markProfileAsCustom();
                         const v = parseFloat(e.target.value);
                         updatePillVisuals(v, 'slider');
                     });
@@ -1747,6 +1934,8 @@ def inject_client_sync_engine():
 
                     sliderElem.addEventListener('pointerdown', (e) => {
                         isDragging = true;
+                        markProfileAsCustom();
+                        if (thumb) thumb.dataset.userDragging = "true";
                         onPointerMove(e);
                     });
 
@@ -1758,11 +1947,13 @@ def inject_client_sync_engine():
                     rootDoc.addEventListener('pointerup', () => {
                         if (!isDragging) return;
                         isDragging = false;
+                        if (thumb) delete thumb.dataset.userDragging;
                         if (numInput) numInput.dispatchEvent(new Event('change', { bubbles: true }));
                         if (rangeInput) rangeInput.dispatchEvent(new Event('change', { bubbles: true }));
+                        updateSliderProgress(sliderElem);
                     });
 
-                    // 2. STEPPER RAPID-CLICK FREEZE BUG FIX (DECOUPLED LOCAL BUFFER)
+                    // 2. Stepper rapid-click freeze bug fix (decoupled local buffer)
                     let stepperBuffer = parseFloat(numInput.value) || initialVal;
                     let stepperTimer = null;
 
@@ -1776,16 +1967,16 @@ def inject_client_sync_engine():
                         if (!isFloat) stepperBuffer = Math.round(stepperBuffer);
                         else stepperBuffer = Math.round(stepperBuffer / step) * step;
 
-                        // Immediate 0 ms update to input box and slider progress bar
+                        markProfileAsCustom();
                         updatePillVisuals(stepperBuffer, 'number');
 
-                        // Debounce commitment to prevent UI-blocking server/React reruns
                         clearTimeout(stepperTimer);
                         stepperTimer = setTimeout(() => {
                             nativeInputSetter.call(numInput, formatVal(stepperBuffer));
                             numInput.dispatchEvent(new Event('change', { bubbles: true }));
                             nativeInputSetter.call(rangeInput, stepperBuffer.toString());
                             rangeInput.dispatchEvent(new Event('change', { bubbles: true }));
+                            updateSliderProgress(sliderElem);
                         }, 320);
                     }
 
@@ -1798,8 +1989,9 @@ def inject_client_sync_engine():
                         decBtn.addEventListener('pointerdown', (e) => e.stopPropagation(), true);
                     }
 
-                    // 3. DIRECT TEXT BOX TYPING SYNCHRONIZATION
+                    // 3. Direct text box typing synchronization
                     numInput.addEventListener('input', (e) => {
+                        markProfileAsCustom();
                         const val = parseFloat(e.target.value);
                         if (!isNaN(val)) {
                             stepperBuffer = val;
@@ -1817,14 +2009,14 @@ def inject_client_sync_engine():
                 });
             }
 
-
             // ── RESTORE APPLE SF-STYLE ICONS & CHEVRONS ──
             function updateAppleIcons() {
-                const rootDoc = window.parent.document || document;
-
                 // 1. Collapsed Developer Toggle Button
                 const expandBtn = rootDoc.querySelector('button[data-testid="stExpandSidebarButton"]');
                 if (expandBtn) {
+                    const defaultSvgs = expandBtn.querySelectorAll('svg:not(.apple-sidebar-toggle-icon)');
+                    defaultSvgs.forEach(s => s.style.display = 'none');
+
                     if (!expandBtn.querySelector('.apple-chevrons-right-icon')) {
                         const rightSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
                         rightSvg.setAttribute('viewBox', '0 0 24 24');
@@ -1877,7 +2069,6 @@ def inject_client_sync_engine():
 
             // ── DIRECT CLIENT-SIDE BLOB DOWNLOAD & TOAST CONFIRMATION ──
             function ensureToastContainer() {
-                const rootDoc = window.parent.document || document;
                 let toast = rootDoc.getElementById('apple-feedback-toast');
                 if (!toast) {
                     toast = rootDoc.createElement('div');
@@ -1905,7 +2096,6 @@ def inject_client_sync_engine():
             };
 
             window.parent.triggerDirectBlobDownload = function() {
-                const rootDoc = window.parent.document || document;
                 try {
                     const b64 = window.parent.__currentPdfBase64;
                     const filename = window.parent.__currentPdfFilename || 'Diabetes_Assessment_Report.pdf';
@@ -1933,13 +2123,34 @@ def inject_client_sync_engine():
                 window.parent.showAppleToast("Report successfully generated and saved to your Downloads");
             };
 
-            // Execute immediately and monitor DOM additions
+            // Run immediately and monitor DOM additions
+            updateAllSlidersProgress();
             initDualInputSync();
             updateAppleIcons();
+
             setInterval(() => {
+                updateAllSlidersProgress();
                 initDualInputSync();
                 updateAppleIcons();
-            }, 300);
+            }, 120);
+
+            // Hook into click and change events to update slider fills instantly on presets
+            rootDoc.addEventListener('click', () => {
+                setTimeout(updateAllSlidersProgress, 20);
+                setTimeout(updateAllSlidersProgress, 100);
+                setTimeout(updateAllSlidersProgress, 250);
+            });
+            rootDoc.addEventListener('change', () => {
+                setTimeout(updateAllSlidersProgress, 20);
+                setTimeout(updateAllSlidersProgress, 100);
+            });
+
+            const domObserver = new MutationObserver(() => {
+                updateAllSlidersProgress();
+                initDualInputSync();
+                updateAppleIcons();
+            });
+            domObserver.observe(rootDoc.body, { childList: true, subtree: true });
 
         })();
         </script>
@@ -1962,6 +2173,14 @@ def main():
     # Load data & machine learning models (Dual-Routing: 8-feature & 4-feature)
     df = load_dataset()
     pipeline_8, pipeline_4 = load_models()
+
+    # Master state variables for unidirectional flow
+    if "profile_selection" not in st.session_state:
+        st.session_state["profile_selection"] = "Custom Profile"
+    if "preset_selector" not in st.session_state:
+        st.session_state["preset_selector"] = "Custom Profile"
+    if "bp_mode" not in st.session_state:
+        st.session_state["bp_mode"] = "Detailed Entry (Systolic & Diastolic)"
 
     # Initialize session states for all features
     for f in FEATURE_META.keys():
@@ -1987,7 +2206,7 @@ def main():
             <h2 style="font-size: 1.25rem; font-weight: 800; margin: 0; color: #1C1C1E;">Developer Drawer</h2>
         </div>
         <p style="font-size: 0.80rem; color: #8E8E93; margin-bottom: 1rem;">
-            Diagnostic Telemetry & Model Benchmarking
+            Diagnostic Telemetry &amp; Model Benchmarking
         </p>
         ''', unsafe_allow_html=True)
 
@@ -2046,28 +2265,218 @@ def main():
     # ─────────────────────────────────────────────────────────────
     with col_input_panel:
         # ── Clinical Preset Selector Row ──
-        st.markdown('<div class="section-label">CLINICAL PRESET PROFILE</div>', unsafe_allow_html=True)
-        selected_preset = st.selectbox(
+        curr_profile = st.session_state.get("profile_selection", "Custom Profile")
+        badge_cls = "badge-amber" if curr_profile == "Custom Profile" else "badge-normal"
+        st.markdown(f'''
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+            <div class="section-label" style="margin-bottom: 0;">CLINICAL PRESET PROFILE</div>
+            <span id="active-profile-badge" class="range-badge {badge_cls}" style="font-size: 0.76rem; padding: 2px 8px;">{curr_profile}</span>
+        </div>
+        ''', unsafe_allow_html=True)
+
+        preset_options = list(PRESETS.keys())
+        preset_idx = preset_options.index(st.session_state.get("preset_selector", "Custom Profile")) if st.session_state.get("preset_selector") in preset_options else 0
+        st.selectbox(
             label="Clinical Preset",
-            options=list(PRESETS.keys()),
-            index=0,
+            options=preset_options,
+            index=preset_idx,
             key="preset_selector",
+            on_change=on_preset_selector_change,
             label_visibility="collapsed",
         )
-        if selected_preset != st.session_state.get("current_preset", "Custom Profile"):
-            apply_preset(selected_preset)
-            st.session_state["current_preset"] = selected_preset
-            st.rerun()
+
+        # Quick Preset Buttons (Explicit on_click callbacks)
+        col_p1, col_p2, col_p3, col_p4 = st.columns(4)
+        with col_p1:
+            st.button("Normal", type="secondary", key="btn_preset_normal", on_click=apply_preset_callback, args=("Normal Clinical Profile",), use_container_width=True)
+        with col_p2:
+            st.button("Borderline", type="secondary", key="btn_preset_borderline", on_click=apply_preset_callback, args=("Borderline Risk Profile",), use_container_width=True)
+        with col_p3:
+            st.button("Elevated", type="secondary", key="btn_preset_elevated", on_click=apply_preset_callback, args=("Elevated Risk Profile",), use_container_width=True)
+        with col_p4:
+            st.button("Obese / HTN", type="secondary", key="btn_preset_obese", on_click=apply_preset_callback, args=("Clinical Obesity & Hypertension Profile",), use_container_width=True)
 
         # ── 1. Primary Clinical Metrics (Required) Glass Container ──
         st.markdown('<div class="section-label" style="margin-top: 0.6rem;">PRIMARY CLINICAL METRICS (REQUIRED)</div>', unsafe_allow_html=True)
         with st.container(border=True):
-            CLINICAL_PRIMARY_INPUTS = ["Glucose", "SystolicBP", "BloodPressure", "BMI", "Age"]
-            for feat in CLINICAL_PRIMARY_INPUTS:
+            # 1. Glucose
+            meta_g = FEATURE_META["Glucose"]
+            st.markdown(f'''
+            <div class="metric-row-header">
+                <div class="metric-title-group">
+                    {render_badge(meta_g["icon"], meta_g["badge"])}
+                    <span class="metric-row-title">{meta_g["label"]}</span>
+                </div>
+                <span class="metric-row-unit">({meta_g["unit"]})</span>
+            </div>
+            ''', unsafe_allow_html=True)
+            c_slide, c_num = st.columns([3.4, 1.25])
+            with c_slide:
+                st.slider(
+                    label=meta_g["label"],
+                    min_value=meta_g["type"](meta_g["min"]),
+                    max_value=meta_g["type"](meta_g["max"]),
+                    step=meta_g["type"](meta_g["step"]) if meta_g["type"] == float else meta_g["step"],
+                    key="slider_Glucose",
+                    on_change=on_custom_input_change,
+                    args=("Glucose", "slider"),
+                    label_visibility="collapsed",
+                )
+            with c_num:
+                st.number_input(
+                    label=meta_g["label"],
+                    min_value=meta_g["type"](meta_g["min"]),
+                    max_value=meta_g["type"](meta_g["max"]),
+                    step=meta_g["type"](meta_g["step"]) if meta_g["type"] == float else meta_g["step"],
+                    key="num_Glucose",
+                    on_change=on_custom_input_change,
+                    args=("Glucose", "num"),
+                    label_visibility="collapsed",
+                )
+            input_values["Glucose"] = st.session_state.get("num_Glucose", st.session_state["slider_Glucose"])
+
+            # 2. Blood Pressure Architecture (Apple Segmented Control)
+            st.markdown('<div style="margin-top: 10px; margin-bottom: 5px; font-size: 0.74rem; font-weight: 700; color: #8E8E93; text-transform: uppercase; letter-spacing: 0.5px;">Blood Pressure Input Architecture</div>', unsafe_allow_html=True)
+            bp_options = ["Detailed Entry (Systolic & Diastolic)", "Direct Entry (Diastolic Only)"]
+            bp_index = 0 if "Detailed" in st.session_state.get("bp_mode", "Detailed") else 1
+            st.radio(
+                "Blood Pressure Input Architecture",
+                options=bp_options,
+                index=bp_index,
+                horizontal=True,
+                key="bp_mode_radio",
+                on_change=lambda: st.session_state.update({"bp_mode": st.session_state["bp_mode_radio"]}),
+                label_visibility="collapsed",
+            )
+            is_detailed_bp = "Detailed" in st.session_state.get("bp_mode", "Detailed")
+
+            if is_detailed_bp:
+                # Mode A: Detailed Entry (Systolic SBP and Diastolic DBP)
+                # Systolic Blood Pressure (SBP)
+                meta_sbp = FEATURE_META["SystolicBP"]
+                st.markdown(f'''
+                <div class="metric-row-header" style="margin-top: 6px;">
+                    <div class="metric-title-group">
+                        {render_badge(meta_sbp["icon"], meta_sbp["badge"])}
+                        <span class="metric-row-title">{meta_sbp["label"]}</span>
+                    </div>
+                    <span class="metric-row-unit">({meta_sbp["unit"]})</span>
+                </div>
+                ''', unsafe_allow_html=True)
+                c_slide, c_num = st.columns([3.4, 1.25])
+                with c_slide:
+                    st.slider(
+                        label=meta_sbp["label"],
+                        min_value=meta_sbp["type"](meta_sbp["min"]),
+                        max_value=meta_sbp["type"](meta_sbp["max"]),
+                        step=meta_sbp["type"](meta_sbp["step"]) if meta_sbp["type"] == float else meta_sbp["step"],
+                        key="slider_SystolicBP",
+                        on_change=on_custom_input_change,
+                        args=("SystolicBP", "slider"),
+                        label_visibility="collapsed",
+                    )
+                with c_num:
+                    st.number_input(
+                        label=meta_sbp["label"],
+                        min_value=meta_sbp["type"](meta_sbp["min"]),
+                        max_value=meta_sbp["type"](meta_sbp["max"]),
+                        step=meta_sbp["type"](meta_sbp["step"]) if meta_sbp["type"] == float else meta_sbp["step"],
+                        key="num_SystolicBP",
+                        on_change=on_custom_input_change,
+                        args=("SystolicBP", "num"),
+                        label_visibility="collapsed",
+                    )
+                input_values["SystolicBP"] = st.session_state.get("num_SystolicBP", st.session_state["slider_SystolicBP"])
+
+                # Diastolic Blood Pressure (DBP)
+                meta_dbp = FEATURE_META["BloodPressure"]
+                st.markdown(f'''
+                <div class="metric-row-header" style="margin-top: 6px;">
+                    <div class="metric-title-group">
+                        {render_badge(meta_dbp["icon"], meta_dbp["badge"])}
+                        <span class="metric-row-title">{meta_dbp["label"]}</span>
+                    </div>
+                    <span class="metric-row-unit">({meta_dbp["unit"]})</span>
+                </div>
+                ''', unsafe_allow_html=True)
+                c_slide, c_num = st.columns([3.4, 1.25])
+                with c_slide:
+                    st.slider(
+                        label=meta_dbp["label"],
+                        min_value=meta_dbp["type"](meta_dbp["min"]),
+                        max_value=meta_dbp["type"](meta_dbp["max"]),
+                        step=meta_dbp["type"](meta_dbp["step"]) if meta_dbp["type"] == float else meta_dbp["step"],
+                        key="slider_BloodPressure",
+                        on_change=on_custom_input_change,
+                        args=("BloodPressure", "slider"),
+                        label_visibility="collapsed",
+                    )
+                with c_num:
+                    st.number_input(
+                        label=meta_dbp["label"],
+                        min_value=meta_dbp["type"](meta_dbp["min"]),
+                        max_value=meta_dbp["type"](meta_dbp["max"]),
+                        step=meta_dbp["type"](meta_dbp["step"]) if meta_dbp["type"] == float else meta_dbp["step"],
+                        key="num_BloodPressure",
+                        on_change=on_custom_input_change,
+                        args=("BloodPressure", "num"),
+                        label_visibility="collapsed",
+                    )
+                input_values["BloodPressure"] = st.session_state.get("num_BloodPressure", st.session_state["slider_BloodPressure"])
+
+                st.markdown('''
+                <div class="bp-telemetry-note">
+                    Dual BP Telemetry: Systolic SBP provides AHA cardiovascular staging &amp; lifestyle guidance, while Diastolic DBP feeds the ML classification model.
+                </div>
+                ''', unsafe_allow_html=True)
+            else:
+                # Mode B: Direct Entry (Diastolic Blood Pressure Only)
+                meta_dbp = FEATURE_META["BloodPressure"]
+                st.markdown(f'''
+                <div class="metric-row-header" style="margin-top: 6px;">
+                    <div class="metric-title-group">
+                        {render_badge(meta_dbp["icon"], meta_dbp["badge"])}
+                        <span class="metric-row-title">{meta_dbp["label"]}</span>
+                    </div>
+                    <span class="metric-row-unit">({meta_dbp["unit"]})</span>
+                </div>
+                ''', unsafe_allow_html=True)
+                c_slide, c_num = st.columns([3.4, 1.25])
+                with c_slide:
+                    st.slider(
+                        label=meta_dbp["label"],
+                        min_value=meta_dbp["type"](meta_dbp["min"]),
+                        max_value=meta_dbp["type"](meta_dbp["max"]),
+                        step=meta_dbp["type"](meta_dbp["step"]) if meta_dbp["type"] == float else meta_dbp["step"],
+                        key="slider_BloodPressure",
+                        on_change=on_custom_input_change,
+                        args=("BloodPressure", "slider"),
+                        label_visibility="collapsed",
+                    )
+                with c_num:
+                    st.number_input(
+                        label=meta_dbp["label"],
+                        min_value=meta_dbp["type"](meta_dbp["min"]),
+                        max_value=meta_dbp["type"](meta_dbp["max"]),
+                        step=meta_dbp["type"](meta_dbp["step"]) if meta_dbp["type"] == float else meta_dbp["step"],
+                        key="num_BloodPressure",
+                        on_change=on_custom_input_change,
+                        args=("BloodPressure", "num"),
+                        label_visibility="collapsed",
+                    )
+                input_values["BloodPressure"] = st.session_state.get("num_BloodPressure", st.session_state["slider_BloodPressure"])
+                input_values["SystolicBP"] = 120
+
+                st.markdown('''
+                <div class="bp-telemetry-note" style="background: rgba(0, 122, 255, 0.06); padding: 8px 12px; border-radius: 10px; border-left: 3px solid #007AFF; margin-top: 6px; margin-bottom: 10px;">
+                    ℹ️ <strong>Direct Entry Note:</strong> Standard diabetes risk datasets train primarily on Diastolic Blood Pressure (the bottom number).
+                </div>
+                ''', unsafe_allow_html=True)
+
+            # 3. BMI and Age
+            for feat in ["BMI", "Age"]:
                 meta = FEATURE_META[feat]
                 unit_str = f"({meta['unit']})" if meta["unit"] else ""
-                
-                # Header row: Vector Icon Badge + Title + Unit
                 st.markdown(f'''
                 <div class="metric-row-header">
                     <div class="metric-title-group">
@@ -2077,17 +2486,16 @@ def main():
                     <span class="metric-row-unit">{unit_str}</span>
                 </div>
                 ''', unsafe_allow_html=True)
-
-                # Control row: Sleek Slider (73%) + Synchronized Number Input (27%)
                 c_slide, c_num = st.columns([3.4, 1.25])
                 with c_slide:
                     st.slider(
                         label=meta["label"],
                         min_value=meta["type"](meta["min"]),
                         max_value=meta["type"](meta["max"]),
-                        value=meta["type"](st.session_state[f"slider_{feat}"]),
                         step=meta["type"](meta["step"]) if meta["type"] == float else meta["step"],
                         key=f"slider_{feat}",
+                        on_change=on_custom_input_change,
+                        args=(feat, "slider"),
                         label_visibility="collapsed",
                     )
                 with c_num:
@@ -2095,19 +2503,13 @@ def main():
                         label=meta["label"],
                         min_value=meta["type"](meta["min"]),
                         max_value=meta["type"](meta["max"]),
-                        value=meta["type"](st.session_state[f"num_{feat}"]),
                         step=meta["type"](meta["step"]) if meta["type"] == float else meta["step"],
                         key=f"num_{feat}",
+                        on_change=on_custom_input_change,
+                        args=(feat, "num"),
                         label_visibility="collapsed",
                     )
                 input_values[feat] = st.session_state.get(f"num_{feat}", st.session_state[f"slider_{feat}"])
-
-                if feat == "BloodPressure":
-                    st.markdown('''
-                    <div class="bp-telemetry-note">
-                        Dual BP Telemetry: Systolic BP provides AHA cardiovascular staging & lifestyle guidance, while Diastolic BP feeds the ML classification model.
-                    </div>
-                    ''', unsafe_allow_html=True)
 
         # ── 2. Advanced Laboratory Biomarkers (Optional) Collapsible Card ──
         st.markdown('<div class="section-label" style="margin-top: 0.6rem;">ADVANCED LABORATORY BIOMARKERS (OPTIONAL)</div>', unsafe_allow_html=True)
@@ -2131,7 +2533,6 @@ def main():
                 median_val = POPULATION_MEDIANS[feat]
 
                 if not has_advanced:
-                    # Biomarker omitted by default
                     omitted_list.append(feat)
                     st.markdown(f'''
                     <div class="metric-row-header" style="margin-top: 6px; opacity: 0.85;">
@@ -2144,7 +2545,6 @@ def main():
                     ''', unsafe_allow_html=True)
                     input_values[feat] = median_val
                 else:
-                    # User toggled advanced section on: offer individual skip option
                     skip_this = st.checkbox(
                         meta.get("skip_label", f"Skip / Not tested for {meta['label']}"),
                         value=st.session_state.get(f"skip_{feat}", False),
@@ -2179,9 +2579,10 @@ def main():
                                 label=meta["label"],
                                 min_value=meta["type"](meta["min"]),
                                 max_value=meta["type"](meta["max"]),
-                                value=meta["type"](st.session_state[f"slider_{feat}"]),
                                 step=meta["type"](meta["step"]) if meta["type"] == float else meta["step"],
                                 key=f"slider_{feat}",
+                                on_change=on_custom_input_change,
+                                args=(feat, "slider"),
                                 label_visibility="collapsed",
                             )
                         with c_num:
@@ -2189,9 +2590,10 @@ def main():
                                 label=meta["label"],
                                 min_value=meta["type"](meta["min"]),
                                 max_value=meta["type"](meta["max"]),
-                                value=meta["type"](st.session_state[f"num_{feat}"]),
                                 step=meta["type"](meta["step"]) if meta["type"] == float else meta["step"],
                                 key=f"num_{feat}",
+                                on_change=on_custom_input_change,
+                                args=(feat, "num"),
                                 label_visibility="collapsed",
                             )
                         input_values[feat] = st.session_state.get(f"num_{feat}", st.session_state[f"slider_{feat}"])
@@ -2206,7 +2608,7 @@ def main():
     with col_ref_panel:
         st.markdown('<div class="section-label">CLINICAL REFERENCE BENCHMARKS</div>', unsafe_allow_html=True)
         
-        # Reference Row 1: Glucose (Aligned parallel with Glucose Slider)
+        # Reference Row 1: Glucose
         st.markdown(f'''
         <div class="ref-card-row">
             <div class="ref-meta-left">
@@ -2223,24 +2625,24 @@ def main():
         </div>
         ''', unsafe_allow_html=True)
 
-        # Reference Row 2: Blood Pressure (Aligned parallel with BP Slider)
+        # Reference Row 2: Blood Pressure (SBP / DBP)
         st.markdown(f'''
         <div class="ref-card-row">
             <div class="ref-meta-left">
                 {render_badge("heart_pulse", "icon-badge-crimson")}
                 <div>
-                    <div class="ref-metric-name">Blood Pressure (Systolic / Diastolic)</div>
-                    <div class="ref-metric-unit">Normal Target: &lt; 120 / &lt; 80 mm Hg</div>
+                    <div class="ref-metric-name">Blood Pressure (SBP / DBP)</div>
+                    <div class="ref-metric-unit">Normal SBP: &lt; 120 mm Hg &bull; DBP: &lt; 80 mm Hg</div>
                 </div>
             </div>
             <div class="ref-badges-right">
                 <span class="range-badge badge-normal">Normal: &lt; 120/80</span>
-                <span class="range-badge badge-danger">Risk: &ge; 130/80 mm Hg</span>
+                <span class="range-badge badge-danger">Hypertension: &ge; 130/80 mm Hg</span>
             </div>
         </div>
         ''', unsafe_allow_html=True)
 
-        # Reference Row 3: BMI (Aligned parallel with BMI Slider)
+        # Reference Row 3: BMI
         st.markdown(f'''
         <div class="ref-card-row">
             <div class="ref-meta-left">
@@ -2257,18 +2659,18 @@ def main():
         </div>
         ''', unsafe_allow_html=True)
 
-        # Reference Row 4: Age (Aligned parallel with Age Slider)
+        # Reference Row 4: Age
         st.markdown(f'''
         <div class="ref-card-row">
             <div class="ref-meta-left">
                 {render_badge("calendar", "icon-badge-amber")}
                 <div>
-                    <div class="ref-metric-name">Age & Metabolic Baseline</div>
+                    <div class="ref-metric-name">Age &amp; Metabolic Baseline</div>
                     <div class="ref-metric-unit">Standard Baseline: 18–44 yrs</div>
                 </div>
             </div>
             <div class="ref-badges-right">
-                <span class="range-badge badge-normal">Baseline: < 45</span>
+                <span class="range-badge badge-normal">Baseline: &lt; 45</span>
                 <span class="range-badge badge-danger">Elevated: ≥ 45 yrs</span>
             </div>
         </div>
@@ -2286,7 +2688,7 @@ def main():
             </div>
             <div class="ref-badges-right">
                 <span class="range-badge badge-normal">Normal: 16–166</span>
-                <span class="range-badge badge-danger">Elevated: > 166</span>
+                <span class="range-badge badge-danger">Elevated: &gt; 166</span>
             </div>
         </div>
         ''', unsafe_allow_html=True)
@@ -2345,14 +2747,21 @@ def main():
         elif g >= 100:
             flags.append("Fasting Glucose 100–125 mg/dL — Impaired fasting glucose (Prediabetes)")
 
-        sbp = input_values.get("SystolicBP", 120)
-        dbp = input_values.get("BloodPressure", 70)
-        if sbp >= 140 or dbp >= 90:
-            flags.append(f"Blood Pressure {sbp}/{dbp} mm Hg — Stage 2 Hypertension range (High cardiovascular & metabolic risk)")
-        elif sbp >= 130 or dbp >= 80:
-            flags.append(f"Blood Pressure {sbp}/{dbp} mm Hg — Stage 1 Hypertension / Elevated (Target < 120/80 mm Hg)")
-        elif sbp >= 120 and dbp < 80:
-            flags.append(f"Blood Pressure {sbp}/{dbp} mm Hg — Elevated Systolic Blood Pressure (AHA Guidelines)")
+        if is_detailed_bp:
+            sbp = input_values.get("SystolicBP", 120)
+            dbp = input_values.get("BloodPressure", 70)
+            if sbp >= 140 or dbp >= 90:
+                flags.append(f"Blood Pressure {sbp}/{dbp} mm Hg — Stage 2 Hypertension range (High cardiovascular & metabolic risk)")
+            elif sbp >= 130 or dbp >= 80:
+                flags.append(f"Blood Pressure {sbp}/{dbp} mm Hg — Stage 1 Hypertension / Elevated (Target < 120/80 mm Hg)")
+            elif sbp >= 120 and dbp < 80:
+                flags.append(f"Blood Pressure {sbp}/{dbp} mm Hg — Elevated Systolic Blood Pressure (AHA Guidelines)")
+        else:
+            dbp = input_values.get("BloodPressure", 70)
+            if dbp >= 90:
+                flags.append(f"Diastolic Blood Pressure (DBP) {dbp} mm Hg — Stage 2 Diastolic Hypertension (Target < 80 mm Hg)")
+            elif dbp >= 80:
+                flags.append(f"Diastolic Blood Pressure (DBP) {dbp} mm Hg — Stage 1 Diastolic Hypertension (Target < 80 mm Hg)")
 
         bmi_val = input_values.get("BMI", 0)
         if bmi_val >= 30:
@@ -2368,7 +2777,7 @@ def main():
         if "Insulin" not in omitted_in_assessment and ins > 166:
             flags.append("Insulin > 166 µU/mL — Elevated fasting/post-load hyperinsulinemia")
 
-        rec_data = generate_lifestyle_recommendations(prob_diabetic, input_values, flags)
+        rec_data = generate_lifestyle_recommendations(prob_diabetic, input_values, flags, is_detailed_bp=is_detailed_bp)
 
         patient_id_code = f"PT-{datetime.now().strftime('%Y%m%d')}-8841"
         pdf_bytes = generate_clinical_pdf(
@@ -2380,6 +2789,7 @@ def main():
             omitted_features=omitted_in_assessment,
             patient_id=patient_id_code,
             recommendations=rec_data,
+            is_detailed_bp=is_detailed_bp,
         )
 
         b64_pdf = base64.b64encode(pdf_bytes).decode('utf-8')
@@ -2400,6 +2810,7 @@ def main():
             "rec_data": rec_data,
             "should_scroll": True,
             "run_id": current_run_id,
+            "is_detailed_bp": is_detailed_bp,
         }
 
     # ── PERSISTENT ASSESSMENT FINDINGS & CLINICAL PDF EXPORT ──
@@ -2414,6 +2825,7 @@ def main():
         pdf_bytes = res["pdf_bytes"]
         b64_pdf = res["b64_pdf"]
         report_filename = res["filename"]
+        res_is_detailed_bp = res.get("is_detailed_bp", True)
 
         # Target DOM anchor for scrolling
         st.markdown('<div id="assessment-result-anchor" style="padding-top: 1rem;"></div>', unsafe_allow_html=True)
@@ -2438,7 +2850,7 @@ def main():
                 width=0,
             )
 
-        st.markdown('<div class="section-label" style="margin-top: 1.4rem;">RISK STRATIFICATION & FINDINGS</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-label" style="margin-top: 1.4rem;">RISK STRATIFICATION &amp; FINDINGS</div>', unsafe_allow_html=True)
         st.markdown("### Assessment Findings")
 
         # ── Transparency Status Pill (Client Disclosure) ──
@@ -2472,12 +2884,11 @@ def main():
                     {icon_markup}
                     <h3>{label}</h3>
                 </div>
-                <p style="font-size: 1.05rem; margin-bottom: 0.45rem; color: #1C1C1E;">
-                    The statistical machine learning model estimates a <strong>{prob_diabetic*100:.1f}%</strong>
-                    probability of elevated diabetes risk based on the submitted clinical biomarker profile.
-                </p>
-                <p style="font-size: 0.90rem; color: #636366; margin: 0;">
-                    Supervised Classification: <strong>{'Diabetic (Class 1)' if prediction == 1 else 'Non-Diabetic (Class 0)'}</strong>
+                <div class="risk-prob-bar">
+                    <div class="risk-prob-fill" style="width: {prob_diabetic*100:.1f}%;"></div>
+                </div>
+                <p style="font-size: 0.88rem; margin: 0; color: #1C1C1E; font-weight: 500;">
+                    Calculated Diabetic Probability: <strong>{prob_diabetic*100:.1f}%</strong> &bull; Non-Diabetic Probability: <strong>{prob_non_diabetic*100:.1f}%</strong>
                 </p>
             </div>
             ''', unsafe_allow_html=True)
@@ -2560,7 +2971,7 @@ def main():
         # ── APPLE HEALTH PERSONALIZED LIFESTYLE & HEALTH RECOMMENDATIONS ──
         rec_data = res.get("rec_data")
         if not rec_data:
-            rec_data = generate_lifestyle_recommendations(prob_diabetic, input_values, flags)
+            rec_data = generate_lifestyle_recommendations(prob_diabetic, input_values, flags, is_detailed_bp=res_is_detailed_bp)
 
         rec_cards_html = "".join([
             f'<div class="recommendation-card">'
@@ -2604,7 +3015,7 @@ def main():
         <div class="disclaimer">
             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
                 {SVG_ICONS["info"]}
-                <strong>Regulatory & Medical Disclaimer</strong>
+                <strong>Regulatory &amp; Medical Disclaimer</strong>
             </div>
             This clinical decision-support tool is an AI-assisted screening model developed for academic purposes.
             It does not replace professional medical diagnosis. Always consult a licensed healthcare provider
