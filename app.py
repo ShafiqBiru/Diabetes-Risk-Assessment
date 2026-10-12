@@ -49,6 +49,7 @@ from sklearn.metrics import (
 
 from reportlab.lib.pagesizes import letter
 from reportlab.lib import colors
+from reportlab.pdfgen import canvas
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, HRFlowable
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 
@@ -86,9 +87,16 @@ FEATURE_META = {
         "icon": "droplet", "badge": "icon-badge-rose",
         "norm_desc": "Normal Target: 70–99 mg/dL",
     },
+    "SystolicBP": {
+        "label": "Systolic Blood Pressure (SBP)",
+        "min": 70, "max": 200, "default": 120, "step": 1,
+        "unit": "mm Hg", "type": int, "primary": True,
+        "icon": "heart_pulse", "badge": "icon-badge-crimson",
+        "norm_desc": "Normal Target: < 120 mm Hg",
+    },
     "BloodPressure": {
-        "label": "Blood Pressure (Diastolic)",
-        "min": 0, "max": 200, "default": 70, "step": 1,
+        "label": "Blood Pressure (Diastolic - Model Feature)",
+        "min": 40, "max": 140, "default": 70, "step": 1,
         "unit": "mm Hg", "type": int, "primary": True,
         "icon": "heart_pulse", "badge": "icon-badge-crimson",
         "norm_desc": "Normal Target: < 80 mm Hg",
@@ -144,19 +152,19 @@ FEATURE_META = {
 PRESETS = {
     "Custom Profile": None,
     "Normal Clinical Profile": {
-        "Pregnancies": 1, "Glucose": 88, "BloodPressure": 68, "SkinThickness": 22,
+        "Pregnancies": 1, "Glucose": 88, "SystolicBP": 115, "BloodPressure": 68, "SkinThickness": 22,
         "Insulin": 45, "BMI": 22.5, "DiabetesPedigreeFunction": 0.25, "Age": 28,
     },
     "Borderline Risk Profile": {
-        "Pregnancies": 3, "Glucose": 118, "BloodPressure": 78, "SkinThickness": 28,
+        "Pregnancies": 3, "Glucose": 118, "SystolicBP": 128, "BloodPressure": 78, "SkinThickness": 28,
         "Insulin": 130, "BMI": 27.8, "DiabetesPedigreeFunction": 0.45, "Age": 42,
     },
     "Elevated Risk Profile": {
-        "Pregnancies": 6, "Glucose": 168, "BloodPressure": 88, "SkinThickness": 38,
+        "Pregnancies": 6, "Glucose": 168, "SystolicBP": 142, "BloodPressure": 88, "SkinThickness": 38,
         "Insulin": 240, "BMI": 36.2, "DiabetesPedigreeFunction": 0.88, "Age": 54,
     },
     "Clinical Obesity & Hypertension Profile": {
-        "Pregnancies": 2, "Glucose": 142, "BloodPressure": 96, "SkinThickness": 42,
+        "Pregnancies": 2, "Glucose": 142, "SystolicBP": 155, "BloodPressure": 96, "SkinThickness": 42,
         "Insulin": 195, "BMI": 41.5, "DiabetesPedigreeFunction": 0.62, "Age": 49,
     },
 }
@@ -180,6 +188,9 @@ SVG_ICONS = {
     "alert_circle": '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FF9500" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>',
     "info": '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#007AFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>',
     "flask": '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#007AFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2v7.31L4.1 19.34A2 2 0 0 0 5.8 22h12.4a2 2 0 0 0 1.7-2.66L14 9.31V2"></path><line x1="8.5" y1="2" x2="15.5" y2="2"></line><line x1="14" y1="14" x2="10" y2="14"></line></svg>',
+    "salad": '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#34C759" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 21h10a5 5 0 0 0 5-5c0-2-1-3-2-4-1-1-1.5-2.5-1.5-4a7.5 7.5 0 0 0-15 0c0 1.5-.5 3-1.5 4-1 1-2 2-2 4a5 5 0 0 0 5 5z"></path><path d="M12 2v6"></path><path d="m9 5 3 3 3-3"></path></svg>',
+    "flame": '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FF9500" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"></path></svg>',
+    "stethoscope": '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#007AFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.8 2.3A.3.3 0 1 0 5 2H4a2 2 0 0 0-2 2v5a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6V4a2 2 0 0 0-2-2h-1a.2.2 0 1 0 .3.3"></path><path d="M8 15v1a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6v-4"></path><circle cx="20" cy="10" r="2"></circle></svg>',
 }
 
 def render_badge(icon_name, badge_class):
@@ -618,6 +629,11 @@ div[data-testid="stNumberInput"] button:active {
     color: #248A3D;
     border: 1px solid rgba(52, 199, 89, 0.35);
 }
+.badge-amber {
+    background: rgba(255, 149, 0, 0.14);
+    color: #C93400;
+    border: 1px solid rgba(255, 149, 0, 0.35);
+}
 .badge-danger {
     background: rgba(255, 59, 48, 0.14);
     color: #D70015;
@@ -731,6 +747,86 @@ div[data-testid="stDownloadButton"] > button:hover {
     text-transform: uppercase;
     letter-spacing: 0.6px;
     margin-top: 2px;
+}
+
+/* ── Apple Health Recommendations Liquid Glass Container ── */
+.liquid-glass-card {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.45) 0%, rgba(255, 255, 255, 0.28) 100%) !important;
+    backdrop-filter: blur(28px) saturate(210%) !important;
+    -webkit-backdrop-filter: blur(28px) saturate(210%) !important;
+    border-radius: 20px !important;
+    border: 1px solid rgba(255, 255, 255, 0.50) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.85) !important;
+    box-shadow: 0 10px 32px 0 rgba(0, 0, 0, 0.05), inset 0 1px 1px 0 rgba(255, 255, 255, 0.8) !important;
+    padding: 1.35rem 1.6rem !important;
+    margin-top: 1.25rem !important;
+    margin-bottom: 1.0rem !important;
+}
+.recommendation-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-top: 0.9rem;
+}
+@media (max-width: 900px) {
+    .recommendation-grid {
+        grid-template-columns: 1fr;
+    }
+}
+.recommendation-card {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.52) 0%, rgba(255, 255, 255, 0.26) 100%);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.55);
+    border-top: 1px solid rgba(255, 255, 255, 0.85);
+    padding: 1.05rem 1.2rem;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03), inset 0 1px 1px rgba(255, 255, 255, 0.7);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.recommendation-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+}
+.rec-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 0.55rem;
+}
+.rec-cat-title {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: #1C1C1E;
+}
+.rec-bullet-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+.rec-bullet-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 0.81rem;
+    color: #1C1C1E;
+    line-height: 1.42;
+    margin-bottom: 0.40rem;
+}
+.rec-bullet-item:last-child {
+    margin-bottom: 0;
+}
+.rec-check-icon {
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+.bp-telemetry-note {
+    font-size: 0.74rem;
+    color: #8E8E93;
+    margin-top: -2px;
+    margin-bottom: 8px;
+    padding-left: 2px;
+    line-height: 1.35;
 }
 
 /* ── Medical Disclaimer ─────────────────────────────────── */
@@ -895,18 +991,182 @@ div[data-testid="stSidebarCollapseButton"] button:hover {
 # ─────────────────────────────────────────────
 #  CLINICAL PDF REPORT BUILDER (ReportLab)
 # ─────────────────────────────────────────────
-def generate_clinical_pdf(patient_data, prediction, prob_diabetic, prob_non_diabetic, flags, omitted_features=None, patient_id="PT-2026-8841"):
+class NumberedCanvas(canvas.Canvas):
+    """
+    Two-pass canvas renderer that dynamically inserts official clinical page
+    numbers and document metadata headers/footers across all generated pages.
+    """
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._saved_page_states = []
+
+    def showPage(self):
+        self._saved_page_states.append(dict(self.__dict__))
+        self._startPage()
+
+    def save(self):
+        num_pages = len(self._saved_page_states)
+        for state in self._saved_page_states:
+            self.__dict__.update(state)
+            self.draw_page_decorations(num_pages)
+            canvas.Canvas.showPage(self)
+        canvas.Canvas.save(self)
+
+    def draw_page_decorations(self, page_count):
+        self.saveState()
+        self.setFont("Helvetica", 8)
+        self.setFillColor(colors.HexColor("#8E8E93"))
+        self.drawString(36, 18, "Confidential Clinical Telemetry Report • ROC-AI-2026")
+        self.drawRightString(612 - 36, 18, f"Page {self._pageNumber} of {page_count}")
+        self.restoreState()
+
+
+def generate_lifestyle_recommendations(prob_diabetic, input_values, flags):
+    """
+    Dynamically generates personalized lifestyle, nutrition, physical activity,
+    weight & vitals management, and medical follow-up recommendations based on:
+    1. Overall risk tier (Low Risk < 0.40, Moderate 0.40–0.64, Elevated/High >= 0.65)
+    2. Specific biomarker triggers (Glucose > 100, BMI >= 25, SBP >= 130 / DBP >= 80, Age >= 45)
+    """
+    g = input_values.get("Glucose", 100)
+    sbp = input_values.get("SystolicBP", 120)
+    dbp = input_values.get("BloodPressure", 70)
+    bmi = input_values.get("BMI", 22.0)
+    age = input_values.get("Age", 30)
+
+    is_high = prob_diabetic >= 0.65
+    is_mod = 0.40 <= prob_diabetic < 0.65
+    is_low = prob_diabetic < 0.40
+
+    if is_high:
+        tier_label = "Elevated Risk Tier"
+        tier_color = "#D70015"
+        tier_badge_class = "badge-danger"
+    elif is_mod:
+        tier_label = "Moderate Risk Tier"
+        tier_color = "#C93400"
+        tier_badge_class = "badge-amber"
+    else:
+        tier_label = "Low Risk Tier"
+        tier_color = "#248A3D"
+        tier_badge_class = "badge-normal"
+
+    highlights = []
+    if is_low:
+        highlights.append({"cat": "Nutrition", "text": "Low-GI Whole Foods", "badge": "badge-normal"})
+        highlights.append({"cat": "Activity", "text": "150 min/wk Aerobic Base", "badge": "badge-normal"})
+        highlights.append({"cat": "Vitals", "text": "Stable Metabolic Weight", "badge": "badge-normal"})
+        highlights.append({"cat": "Monitoring", "text": "Annual Wellness Check", "badge": "badge-normal"})
+    else:
+        highlights.append({"cat": "Nutrition", "text": "Fiber-First Carbohydrate Moderation", "badge": "badge-danger" if is_high else "badge-amber"})
+        highlights.append({"cat": "Activity", "text": "Post-Meal 15m Walks & Resistance", "badge": "badge-danger" if is_high else "badge-amber"})
+        if bmi >= 25:
+            highlights.append({"cat": "Vitals", "text": "Target 5%–7% Weight Reduction", "badge": "badge-danger" if bmi >= 30 else "badge-amber"})
+        if sbp >= 130 or dbp >= 80:
+            highlights.append({"cat": "Vitals", "text": "DASH Diet & Sodium < 2.3g/day", "badge": "badge-danger" if sbp >= 140 else "badge-amber"})
+        highlights.append({"cat": "Clinical", "text": "Confirmatory HbA1c Lab Panel", "badge": "badge-danger" if is_high else "badge-amber"})
+
+    nutrition_items = []
+    if is_low and g < 100:
+        nutrition_items.append("Focus on a nutrient-dense whole foods diet emphasizing complex carbohydrates with a low glycemic index (GI), such as quinoa, steel-cut oats, and legumes.")
+        nutrition_items.append("Integrate monounsaturated and omega-3 healthy fats (extra virgin olive oil, avocado, walnuts) to support insulin signaling and lipid homeostasis.")
+        nutrition_items.append("Maintain optimal daily hydration of 2.0–2.5 L of water; avoid sugar-sweetened beverages and excessive fruit juices.")
+    else:
+        nutrition_items.append("Minimize refined carbohydrates, added sugars, white flour, and ultra-processed convenience foods to curb rapid postprandial glucose surges.")
+        nutrition_items.append("Prioritize soluble dietary fiber (cruciferous vegetables, chia seeds, lentils, legumes) to delay gastric emptying and flatten glycemic excursions.")
+        if g >= 100:
+            nutrition_items.append("Practice low-glycemic meal sequencing: consume dietary fiber and lean proteins prior to starches to significantly reduce post-meal insulin spikes.")
+        if sbp >= 130 or dbp >= 80:
+            nutrition_items.append("Adopt DASH dietary principles: increase potassium-rich whole foods and strictly restrict daily sodium to < 2,300 mg (ideally < 1,500 mg if hypertensive).")
+
+    activity_items = []
+    if is_low:
+        activity_items.append("Maintain at least 150 minutes of moderate-intensity aerobic exercise per week (e.g., brisk walking, cycling, lap swimming) spread over 3–5 days.")
+        activity_items.append("Incorporate 2 non-consecutive days of multi-joint resistance training to preserve lean skeletal muscle and metabolic resilience.")
+    else:
+        activity_items.append("Incorporate a 10–15 minute brisk walk immediately following main meals (breakfast/dinner) to facilitate non-insulin-mediated GLUT4 glucose uptake.")
+        activity_items.append("Engage in structured progressive resistance training 2–3 times per week targeting major muscle groups to optimize peripheral insulin sensitivity.")
+        if age >= 45:
+            activity_items.append("Focus on low-impact, joint-friendly metabolic conditioning (e.g., incline treadmill walking, elliptical, swimming, pilates) to build muscular endurance.")
+
+    vitals_items = []
+    if is_low and bmi < 25 and sbp < 120 and dbp < 80:
+        vitals_items.append("Sustain current body composition with balanced energy intake and consistent restorative sleep (7–9 hours nightly) to maintain cortisol balance.")
+        vitals_items.append("Periodically self-monitor blood pressure to ensure systolic remains < 120 mm Hg and diastolic < 80 mm Hg.")
+    else:
+        if bmi >= 25:
+            vitals_items.append("Establish a moderate caloric deficit (300–500 kcal/day) targeting a gradual 5%–7% reduction in total body weight, which clinically improves beta-cell function.")
+        else:
+            vitals_items.append("Maintain lean body mass and prevent visceral fat deposition through balanced macronutrient distribution and adequate protein (1.2–1.6 g/kg).")
+        if sbp >= 130 or dbp >= 80:
+            vitals_items.append(f"Monitor and log seated blood pressure twice daily; current reading ({sbp}/{dbp} mm Hg) indicates elevated vascular tone requiring sodium and stress modulation.")
+        else:
+            vitals_items.append("Maintain cardiovascular tracking; keep systolic blood pressure < 120 mm Hg and diastolic < 80 mm Hg through active lifestyle measures.")
+
+    monitoring_items = []
+    if is_low:
+        monitoring_items.append("Continue routine preventive annual or bi-annual health screenings including comprehensive metabolic panels and fasting lipid profiles.")
+        monitoring_items.append("Repeat diabetes risk assessment annually or whenever substantial changes in weight, physical activity, or health status occur.")
+    else:
+        monitoring_items.append("Schedule an in-person clinical consultation with your primary healthcare provider to review this risk assessment and discuss confirmatory lab testing.")
+        monitoring_items.append("Request an official diagnostic laboratory Glycated Hemoglobin (HbA1c) test and Fasting Plasma Glucose (FPG) panel to definitively evaluate glycemic control.")
+        if sbp >= 140 or dbp >= 90:
+            monitoring_items.append("Consult your physician regarding formal clinical staging for hypertension and evaluation of cardiovascular risk markers.")
+        if age >= 45:
+            monitoring_items.append("Given patient age (≥ 45), adhere to ADA clinical guidelines recommending systematic multi-system metabolic and cardiovascular surveillance.")
+
+    return {
+        "risk_tier": tier_label,
+        "tier_color": tier_color,
+        "tier_badge_class": tier_badge_class,
+        "highlights": highlights,
+        "categories": [
+            {
+                "id": "nutrition",
+                "name": "Nutrition & Dietary Strategy",
+                "icon": "salad",
+                "badge": "icon-badge-green",
+                "items": nutrition_items,
+            },
+            {
+                "id": "activity",
+                "name": "Physical Activity & Metabolic Training",
+                "icon": "flame",
+                "badge": "icon-badge-amber",
+                "items": activity_items,
+            },
+            {
+                "id": "vitals",
+                "name": "Weight & Vitals Management",
+                "icon": "scale",
+                "badge": "icon-badge-blue",
+                "items": vitals_items,
+            },
+            {
+                "id": "monitoring",
+                "name": "Medical Monitoring & Clinical Follow-Up",
+                "icon": "heart_pulse",
+                "badge": "icon-badge-crimson",
+                "items": monitoring_items,
+            },
+        ],
+    }
+
+
+def generate_clinical_pdf(patient_data, prediction, prob_diabetic, prob_non_diabetic, flags, omitted_features=None, patient_id="PT-2026-8841", recommendations=None):
     """
     Generate a print-ready clinical screening report adhering strictly to
     standard hospital/clinical documentation standards.
     """
     if omitted_features is None:
         omitted_features = []
+    if recommendations is None:
+        recommendations = generate_lifestyle_recommendations(prob_diabetic, patient_data, flags)
 
     buffer = BytesIO()
     doc = SimpleDocTemplate(
         buffer, pagesize=letter,
-        rightMargin=36, leftMargin=36, topMargin=36, bottomMargin=36
+        rightMargin=36, leftMargin=36, topMargin=32, bottomMargin=32
     )
     
     styles = getSampleStyleSheet()
@@ -914,41 +1174,42 @@ def generate_clinical_pdf(patient_data, prediction, prob_diabetic, prob_non_diab
         'DocTitle',
         parent=styles['Heading1'],
         fontName='Helvetica-Bold',
-        fontSize=18,
-        leading=22,
+        fontSize=15,
+        leading=19,
         textColor=colors.HexColor('#1C1C1E'),
     )
     subtitle_style = ParagraphStyle(
         'DocSub',
         parent=styles['Normal'],
         fontName='Helvetica',
-        fontSize=9,
-        leading=13,
+        fontSize=8.5,
+        leading=11,
         textColor=colors.HexColor('#8E8E93'),
     )
     section_heading = ParagraphStyle(
         'SectionHead',
         parent=styles['Heading2'],
         fontName='Helvetica-Bold',
-        fontSize=10.5,
-        leading=14,
+        fontSize=9.5,
+        leading=13,
         textColor=colors.HexColor('#007AFF'),
-        spaceAfter=4,
+        spaceAfter=3,
+        spaceBefore=2,
     )
     cell_bold = ParagraphStyle(
         'CellBold',
         parent=styles['Normal'],
         fontName='Helvetica-Bold',
-        fontSize=8.5,
-        leading=11,
+        fontSize=8,
+        leading=10,
         textColor=colors.HexColor('#1C1C1E'),
     )
     cell_regular = ParagraphStyle(
         'CellReg',
         parent=styles['Normal'],
         fontName='Helvetica',
-        fontSize=8.5,
-        leading=11,
+        fontSize=8,
+        leading=10,
         textColor=colors.HexColor('#3A3A3C'),
     )
     
@@ -957,8 +1218,8 @@ def generate_clinical_pdf(patient_data, prediction, prob_diabetic, prob_non_diab
     # ── 1. Clinical Header ──
     elements.append(Paragraph("AI Diabetes Risk Assessment — Clinical Screening Report", title_style))
     elements.append(Paragraph("Rocheston RCAI Classroom Project &bull; Clinical Decision Support Telemetry", subtitle_style))
-    elements.append(Spacer(1, 8))
-    elements.append(HRFlowable(width="100%", thickness=1.5, color=colors.HexColor("#007AFF"), spaceBefore=2, spaceAfter=8))
+    elements.append(Spacer(1, 3))
+    elements.append(HRFlowable(width="100%", thickness=1.5, color=colors.HexColor("#007AFF"), spaceBefore=2, spaceAfter=5))
     
     # ── 2. Telemetry Metadata Block ──
     curr_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -978,11 +1239,11 @@ def generate_clinical_pdf(patient_data, prediction, prob_diabetic, prob_non_diab
     meta_table = Table(meta_data, colWidths=[270, 270])
     meta_table.setStyle(TableStyle([
         ('BACKGROUND', (0,0), (-1,-1), colors.HexColor('#F2F2F7')),
-        ('PADDING', (0,0), (-1,-1), 5),
+        ('PADDING', (0,0), (-1,-1), 3.5),
         ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
     ]))
     elements.append(meta_table)
-    elements.append(Spacer(1, 10))
+    elements.append(Spacer(1, 5))
     
     # ── 3. Executive Assessment Findings ──
     elements.append(Paragraph("1. ASSESSMENT FINDINGS & RISK STRATIFICATION", section_heading))
@@ -999,21 +1260,20 @@ def generate_clinical_pdf(patient_data, prediction, prob_diabetic, prob_non_diab
     findings_table = Table(findings_data, colWidths=[270, 270])
     findings_table.setStyle(TableStyle([
         ('BACKGROUND', (0,0), (-1,-1), risk_bg),
-        ('PADDING', (0,0), (-1,-1), 7),
+        ('PADDING', (0,0), (-1,-1), 4.5),
         ('BOX', (0,0), (-1,-1), 1, risk_fg),
     ]))
     elements.append(findings_table)
 
-    # Transparency Note in PDF if parameters omitted
     if omitted_features:
-        elements.append(Spacer(1, 5))
+        elements.append(Spacer(1, 2))
         omitted_text = (
             f"<i><b>Clinical Transparency Note:</b> Assessment calculated using 4 core metrics + standard population "
             f"baselines for omitted lab tests ({', '.join(omitted_features)}).</i>"
         )
-        elements.append(Paragraph(omitted_text, ParagraphStyle('OmitNote', parent=styles['Normal'], fontSize=7.5, leading=10, textColor=colors.HexColor('#007AFF'))))
+        elements.append(Paragraph(omitted_text, ParagraphStyle('OmitNote', parent=styles['Normal'], fontSize=7.5, leading=9, textColor=colors.HexColor('#007AFF'))))
 
-    elements.append(Spacer(1, 10))
+    elements.append(Spacer(1, 5))
     
     # ── 4. Patient Input Profile & Benchmark Comparison ──
     elements.append(Paragraph("2. SUBMITTED CLINICAL PARAMETERS VS. BASELINE BENCHMARKS", section_heading))
@@ -1028,6 +1288,7 @@ def generate_clinical_pdf(patient_data, prediction, prob_diabetic, prob_non_diab
     ]
     ref_norms = {
         "Glucose": ("mg/dL", "70 – 99 mg/dL"),
+        "SystolicBP": ("mm Hg", "< 120 mm Hg (systolic)"),
         "BloodPressure": ("mm Hg", "< 80 mm Hg (diastolic)"),
         "BMI": ("kg/m²", "18.5 – 24.9 kg/m²"),
         "Age": ("years", "18 – 44 years"),
@@ -1036,7 +1297,8 @@ def generate_clinical_pdf(patient_data, prediction, prob_diabetic, prob_non_diab
         "Pregnancies": ("count", "0 – 2"),
         "DiabetesPedigreeFunction": ("score", "< 0.50"),
     }
-    for k in ALL_FEATURES:
+    DISPLAY_REPORT_FEATURES = ["Glucose", "SystolicBP", "BloodPressure", "BMI", "Age", "Insulin", "SkinThickness", "Pregnancies", "DiabetesPedigreeFunction"]
+    for k in DISPLAY_REPORT_FEATURES:
         if k in patient_data:
             v = patient_data[k]
             unit, norm = ref_norms.get(k, ("", "—"))
@@ -1051,15 +1313,15 @@ def generate_clinical_pdf(patient_data, prediction, prob_diabetic, prob_non_diab
                 Paragraph(norm, cell_regular),
             ])
     
-    param_table = Table(param_rows, colWidths=[150, 110, 95, 75, 110])
+    param_table = Table(param_rows, colWidths=[155, 100, 95, 75, 115])
     param_table.setStyle(TableStyle([
         ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#E5E5EA')),
         ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#D1D1D6')),
-        ('PADDING', (0,0), (-1,-1), 4),
+        ('PADDING', (0,0), (-1,-1), 2.8),
         ('ROWBACKGROUNDS', (0,1), (-1,-1), [colors.white, colors.HexColor('#F9F9FB')]),
     ]))
     elements.append(param_table)
-    elements.append(Spacer(1, 10))
+    elements.append(Spacer(1, 5))
     
     # ── 5. Identified Risk Flags ──
     elements.append(Paragraph("3. CLINICAL RISK FACTOR FLAGS", section_heading))
@@ -1071,31 +1333,59 @@ def generate_clinical_pdf(patient_data, prediction, prob_diabetic, prob_non_diab
     flag_table.setStyle(TableStyle([
         ('BACKGROUND', (0,0), (-1,-1), colors.HexColor('#FAFAFA')),
         ('BOX', (0,0), (-1,-1), 0.5, colors.HexColor('#E5E5EA')),
-        ('PADDING', (0,0), (-1,-1), 5),
+        ('PADDING', (0,0), (-1,-1), 3.5),
     ]))
     elements.append(flag_table)
-    elements.append(Spacer(1, 12))
+    elements.append(Spacer(1, 5))
+
+    # ── 6. Personalized Health & Lifestyle Guidance ──
+    elements.append(Paragraph("4. PERSONALIZED HEALTH & LIFESTYLE GUIDANCE", section_heading))
+    guidance_rows = []
+    for cat in recommendations["categories"]:
+        cat_title = Paragraph(f"<b>&bull; {cat['name']}</b>", cell_bold)
+        cat_items_text = "<br/>".join([f"&nbsp;&nbsp;&ndash;&nbsp;{it}" for it in cat["items"]])
+        cat_body = Paragraph(cat_items_text, cell_regular)
+        guidance_rows.append([cat_title])
+        guidance_rows.append([cat_body])
     
-    # ── 6. Regulatory Disclaimer ──
+    notice_text = (
+        "<i><b>Algorithmic Lifestyle Notice:</b> These recommendations are algorithmic lifestyle suggestions based on "
+        "clinical screening thresholds and should be discussed with a qualified medical provider.</i>"
+    )
+    guidance_rows.append([Paragraph(notice_text, ParagraphStyle('AlgNotice', parent=styles['Normal'], fontSize=7.5, leading=9.5, textColor=colors.HexColor('#007AFF')))])
+
+    guidance_table = Table(guidance_rows, colWidths=[540])
+    guidance_table.setStyle(TableStyle([
+        ('BACKGROUND', (0,0), (-1,-1), colors.HexColor('#FAFAFA')),
+        ('BOX', (0,0), (-1,-1), 0.5, colors.HexColor('#E5E5EA')),
+        ('PADDING', (0,0), (-1,-1), 3),
+        ('ROWBACKGROUNDS', (0,0), (-1,-1), [colors.HexColor('#F2F2F7'), colors.white]),
+    ]))
+    elements.append(guidance_table)
+    elements.append(Spacer(1, 5))
+    
+    # ── 7. Regulatory Disclaimer ──
+    elements.append(Paragraph("5. REGULATORY & MEDICAL DISCLAIMER", section_heading))
     disclaimer_text = (
         "<b>Regulatory & Medical Disclaimer:</b> This document is generated automatically by a statistical machine learning "
         "supervised classification pipeline for screening purposes and does not replace professional medical diagnosis. "
         "Always consult a licensed medical practitioner for comprehensive evaluation, official blood testing "
         "(e.g., HbA1c, OGTT), and tailored healthcare decisions."
     )
-    disc_para = Paragraph(disclaimer_text, ParagraphStyle('Disc', parent=styles['Normal'], fontSize=7.5, leading=10, textColor=colors.HexColor('#636366')))
+    disc_para = Paragraph(disclaimer_text, ParagraphStyle('Disc', parent=styles['Normal'], fontSize=7.5, leading=9.5, textColor=colors.HexColor('#636366')))
     disc_table = Table([[disc_para]], colWidths=[540])
     disc_table.setStyle(TableStyle([
         ('BACKGROUND', (0,0), (-1,-1), colors.HexColor('#F2F2F7')),
         ('BOX', (0,0), (-1,-1), 0.5, colors.HexColor('#D1D1D6')),
         ('LINELEFT', (0,0), (0,-1), 3, colors.HexColor('#007AFF')),
-        ('PADDING', (0,0), (-1,-1), 5.5),
+        ('PADDING', (0,0), (-1,-1), 4),
     ]))
     elements.append(disc_table)
     
-    doc.build(elements)
+    doc.build(elements, canvasmaker=NumberedCanvas)
     buffer.seek(0)
     return buffer.getvalue()
+
 
 # ─────────────────────────────────────────────
 #  DATA & MODEL LOADING (DUAL-ROUTING)
@@ -1674,7 +1964,7 @@ def main():
     pipeline_8, pipeline_4 = load_models()
 
     # Initialize session states for all features
-    for f in ALL_FEATURES:
+    for f in FEATURE_META.keys():
         meta = FEATURE_META[f]
         if f"slider_{f}" not in st.session_state:
             def_val = meta["type"](meta["default"])
@@ -1772,7 +2062,8 @@ def main():
         # ── 1. Primary Clinical Metrics (Required) Glass Container ──
         st.markdown('<div class="section-label" style="margin-top: 0.6rem;">PRIMARY CLINICAL METRICS (REQUIRED)</div>', unsafe_allow_html=True)
         with st.container(border=True):
-            for feat in PRIMARY_FEATURES:
+            CLINICAL_PRIMARY_INPUTS = ["Glucose", "SystolicBP", "BloodPressure", "BMI", "Age"]
+            for feat in CLINICAL_PRIMARY_INPUTS:
                 meta = FEATURE_META[feat]
                 unit_str = f"({meta['unit']})" if meta["unit"] else ""
                 
@@ -1810,6 +2101,13 @@ def main():
                         label_visibility="collapsed",
                     )
                 input_values[feat] = st.session_state.get(f"num_{feat}", st.session_state[f"slider_{feat}"])
+
+                if feat == "BloodPressure":
+                    st.markdown('''
+                    <div class="bp-telemetry-note">
+                        Dual BP Telemetry: Systolic BP provides AHA cardiovascular staging & lifestyle guidance, while Diastolic BP feeds the ML classification model.
+                    </div>
+                    ''', unsafe_allow_html=True)
 
         # ── 2. Advanced Laboratory Biomarkers (Optional) Collapsible Card ──
         st.markdown('<div class="section-label" style="margin-top: 0.6rem;">ADVANCED LABORATORY BIOMARKERS (OPTIONAL)</div>', unsafe_allow_html=True)
@@ -1931,13 +2229,13 @@ def main():
             <div class="ref-meta-left">
                 {render_badge("heart_pulse", "icon-badge-crimson")}
                 <div>
-                    <div class="ref-metric-name">Diastolic Blood Pressure</div>
-                    <div class="ref-metric-unit">Normal Target: < 80 mm Hg</div>
+                    <div class="ref-metric-name">Blood Pressure (Systolic / Diastolic)</div>
+                    <div class="ref-metric-unit">Normal Target: &lt; 120 / &lt; 80 mm Hg</div>
                 </div>
             </div>
             <div class="ref-badges-right">
-                <span class="range-badge badge-normal">Normal: < 80</span>
-                <span class="range-badge badge-danger">Risk: ≥ 90 mm Hg</span>
+                <span class="range-badge badge-normal">Normal: &lt; 120/80</span>
+                <span class="range-badge badge-danger">Risk: &ge; 130/80 mm Hg</span>
             </div>
         </div>
         ''', unsafe_allow_html=True)
@@ -2047,11 +2345,14 @@ def main():
         elif g >= 100:
             flags.append("Fasting Glucose 100–125 mg/dL — Impaired fasting glucose (Prediabetes)")
 
-        bp = input_values.get("BloodPressure", 0)
-        if bp >= 90:
-            flags.append("Blood Pressure ≥ 90 mm Hg — Stage 2 Hypertension range")
-        elif bp >= 80:
-            flags.append("Blood Pressure 80–89 mm Hg — Prehypertension / Elevated")
+        sbp = input_values.get("SystolicBP", 120)
+        dbp = input_values.get("BloodPressure", 70)
+        if sbp >= 140 or dbp >= 90:
+            flags.append(f"Blood Pressure {sbp}/{dbp} mm Hg — Stage 2 Hypertension range (High cardiovascular & metabolic risk)")
+        elif sbp >= 130 or dbp >= 80:
+            flags.append(f"Blood Pressure {sbp}/{dbp} mm Hg — Stage 1 Hypertension / Elevated (Target < 120/80 mm Hg)")
+        elif sbp >= 120 and dbp < 80:
+            flags.append(f"Blood Pressure {sbp}/{dbp} mm Hg — Elevated Systolic Blood Pressure (AHA Guidelines)")
 
         bmi_val = input_values.get("BMI", 0)
         if bmi_val >= 30:
@@ -2067,6 +2368,8 @@ def main():
         if "Insulin" not in omitted_in_assessment and ins > 166:
             flags.append("Insulin > 166 µU/mL — Elevated fasting/post-load hyperinsulinemia")
 
+        rec_data = generate_lifestyle_recommendations(prob_diabetic, input_values, flags)
+
         patient_id_code = f"PT-{datetime.now().strftime('%Y%m%d')}-8841"
         pdf_bytes = generate_clinical_pdf(
             patient_data=input_values,
@@ -2076,6 +2379,7 @@ def main():
             flags=flags,
             omitted_features=omitted_in_assessment,
             patient_id=patient_id_code,
+            recommendations=rec_data,
         )
 
         b64_pdf = base64.b64encode(pdf_bytes).decode('utf-8')
@@ -2093,6 +2397,7 @@ def main():
             "pdf_bytes": pdf_bytes,
             "b64_pdf": b64_pdf,
             "filename": report_filename,
+            "rec_data": rec_data,
             "should_scroll": True,
             "run_id": current_run_id,
         }
@@ -2251,6 +2556,48 @@ def main():
                     <div class="label">Diabetic Risk</div>
                 </div>
                 """, unsafe_allow_html=True)
+
+        # ── APPLE HEALTH PERSONALIZED LIFESTYLE & HEALTH RECOMMENDATIONS ──
+        rec_data = res.get("rec_data")
+        if not rec_data:
+            rec_data = generate_lifestyle_recommendations(prob_diabetic, input_values, flags)
+
+        rec_cards_html = "".join([
+            f'<div class="recommendation-card">'
+            f'<div class="rec-header">{render_badge(cat["icon"], cat["badge"])}<div class="rec-cat-title">{cat["name"]}</div></div>'
+            f'<ul class="rec-bullet-list">' + "".join([
+                f'<li class="rec-bullet-item"><span class="rec-check-icon">{SVG_ICONS["check"]}</span><span>{it}</span></li>'
+                for it in cat["items"]
+            ]) + '</ul></div>'
+            for cat in rec_data["categories"]
+        ])
+
+        highlights_html = "".join([
+            f'<span class="range-badge {hl["badge"]}" style="margin-right: 6px; margin-bottom: 4px;"><strong>{hl["cat"]}:</strong>&nbsp;{hl["text"]}</span>'
+            for hl in rec_data["highlights"]
+        ])
+
+        rec_container_html = (
+            f'<div class="liquid-glass-card">'
+            f'<div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-bottom: 0.85rem;">'
+            f'<div style="display: flex; align-items: center; gap: 10px;">'
+            f'{render_badge("salad", "icon-badge-green")}'
+            f'<div>'
+            f'<div style="font-size: 1.18rem; font-weight: 800; color: #1C1C1E; letter-spacing: -0.015em; line-height: 1.25;">Personalized Health &amp; Lifestyle Guidance</div>'
+            f'<span style="font-size: 0.74rem; font-weight: 600; color: #8E8E93; text-transform: uppercase; letter-spacing: 0.6px;">Apple Health Clinical Strategy • Tailored Metabolic Directive</span>'
+            f'</div></div>'
+            f'<div><span class="range-badge {rec_data["tier_badge_class"]}">{rec_data["risk_tier"]}</span></div>'
+            f'</div>'
+            f'<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 0.95rem; padding: 0.65rem 0.90rem; background: rgba(255, 255, 255, 0.45); border-radius: 14px; border: 1px solid rgba(255, 255, 255, 0.65);">'
+            f'<span style="font-size: 0.74rem; font-weight: 700; color: #8E8E93; text-transform: uppercase; letter-spacing: 0.5px; margin-right: 4px;">Actionable Highlights:</span>'
+            f'{highlights_html}</div>'
+            f'<div class="recommendation-grid">{rec_cards_html}</div>'
+            f'<div style="margin-top: 1.05rem; padding-top: 0.75rem; border-top: 1px solid rgba(0, 0, 0, 0.06); font-size: 0.77rem; color: #8E8E93; display: flex; align-items: center; gap: 8px; line-height: 1.4;">'
+            f'{SVG_ICONS["info"]}<span><strong>Clinical Notice:</strong> These recommendations are algorithmic lifestyle suggestions based on clinical screening thresholds and should be discussed with a qualified medical provider.</span>'
+            f'</div></div>'
+        )
+
+        st.markdown(rec_container_html, unsafe_allow_html=True)
 
         # Regulatory Disclaimer
         st.markdown(f'''
