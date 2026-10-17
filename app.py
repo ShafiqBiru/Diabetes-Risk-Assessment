@@ -682,21 +682,53 @@ button[data-testid="baseButton-secondary"]:hover {
     box-shadow: 0 4px 12px rgba(0, 122, 255, 0.15) !important;
 }
 
-/* ── PDF Download Button (Centered Apple Pill) ───────────── */
+/* ── Semicircular Gauge Chart Bounding Box & Spacing ────── */
+.gauge-container {
+    width: 100% !important;
+    max-width: 320px !important;
+    margin: 0 auto 18px auto !important;
+    padding-bottom: 0px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+.apple-risk-gauge-svg {
+    width: 100% !important;
+    height: auto !important;
+    max-height: 180px !important;
+    display: block !important;
+    overflow: visible !important;
+}
+
+/* ── PDF Download Button (Strict Horizontal Page-Level Centering) ───────────── */
+.report-download-wrapper {
+    width: 100% !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    margin: 28px 0 !important;
+    text-align: center !important;
+}
+div.stElementContainer:has(div[data-testid="stDownloadButton"]),
+.st-key-download_assessment_report_pdf,
 div[data-testid="stDownloadButton"] {
     display: flex !important;
     justify-content: center !important;
     align-items: center !important;
-    margin: 24px auto !important;
+    margin: 0 auto !important;
     width: 100% !important;
+    text-align: center !important;
 }
 div[data-testid="stDownloadButton"] > button {
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
+    margin: 0 auto !important;
     width: auto !important;
+    min-width: 260px !important;
     max-width: fit-content !important;
-    padding: 12px 28px !important;
+    padding: 12px 32px !important;
     border-radius: 9999px !important;
     font-weight: 600 !important;
     font-size: 0.92rem !important;
@@ -1694,6 +1726,50 @@ def plot_feature_importance(_pipeline, feature_names):
     ax.spines["bottom"].set_color("#D1D1D6")
     plt.tight_layout()
     return _fig_to_buf(fig)
+
+def render_svg_gauge(prob_diabetic):
+    """Render an authentic Apple Health semicircular gauge cropped tightly to upper hemisphere."""
+    import math
+    cx, cy = 150, 110
+    r_in, r_out = 70, 96
+    
+    def describe_arc(a_start, a_end):
+        a1, a2 = math.radians(a_start), math.radians(a_end)
+        x1_o, y1_o = cx + r_out * math.cos(a1), cy - r_out * math.sin(a1)
+        x2_o, y2_o = cx + r_out * math.cos(a2), cy - r_out * math.sin(a2)
+        x2_i, y2_i = cx + r_in * math.cos(a2), cy - r_in * math.sin(a2)
+        x1_i, y1_i = cx + r_in * math.cos(a1), cy - r_in * math.sin(a1)
+        large = 1 if abs(a_end - a_start) > 180 else 0
+        return f"M {x1_o:.2f} {y1_o:.2f} A {r_out} {r_out} 0 {large} 1 {x2_o:.2f} {y2_o:.2f} L {x2_i:.2f} {y2_i:.2f} A {r_in} {r_in} 0 {large} 0 {x1_i:.2f} {y1_i:.2f} Z"
+
+    d_green = describe_arc(180, 120)
+    d_orange = describe_arc(120, 60)
+    d_red = describe_arc(60, 0)
+    
+    needle_deg = 180.0 - (prob_diabetic * 180.0)
+    n_rad = math.radians(needle_deg)
+    tip_r = r_out - 4
+    nx = cx + tip_r * math.cos(n_rad)
+    ny = cy - tip_r * math.sin(n_rad)
+    
+    pct_str = f"{prob_diabetic * 100:.1f}%"
+
+    return (
+        f'<div class="gauge-container">'
+        f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 162" class="apple-risk-gauge-svg">'
+        f'<path d="{d_green}" fill="#34C759" opacity="0.9" />'
+        f'<path d="{d_orange}" fill="#FF9500" opacity="0.9" />'
+        f'<path d="{d_red}" fill="#FF3B30" opacity="0.9" />'
+        f'<line x1="{cx}" y1="{cy}" x2="{nx:.2f}" y2="{ny:.2f}" stroke="#1C1C1E" stroke-width="3.5" stroke-linecap="round" />'
+        f'<circle cx="{cx}" cy="{cy}" r="8" fill="#1C1C1E" />'
+        f'<circle cx="{cx}" cy="{cy}" r="2.8" fill="#FFFFFF" />'
+        f'<text x="42" y="114" font-size="10" font-weight="700" fill="#8E8E93" text-anchor="end">Low</text>'
+        f'<text x="258" y="114" font-size="10" font-weight="700" fill="#8E8E93" text-anchor="start">High</text>'
+        f'<text x="{cx}" y="{cy + 27}" font-size="23" font-weight="900" fill="#1C1C1E" text-anchor="middle" letter-spacing="-0.02em">{pct_str}</text>'
+        f'<text x="{cx}" y="{cy + 43}" font-size="8.5" font-weight="700" fill="#8E8E93" text-anchor="middle" letter-spacing="0.6px">DIABETES RISK SCORE</text>'
+        f'</svg>'
+        f'</div>'
+    )
 
 @st.cache_data
 def plot_risk_gauge(prob_diabetic):
@@ -2894,8 +2970,7 @@ def main():
                 ''', unsafe_allow_html=True)
 
         with res_right:
-            gauge_buf = plot_risk_gauge(prob_diabetic)
-            st.image(gauge_buf, use_container_width=True)
+            st.markdown(render_svg_gauge(prob_diabetic), unsafe_allow_html=True)
 
             mcol1, mcol2 = st.columns(2)
             with mcol1:
@@ -2955,15 +3030,19 @@ def main():
 
         st.markdown(rec_container_html, unsafe_allow_html=True)
 
-        # ── 4. CENTERED CLINICAL PDF REPORT DOWNLOAD (Apple Pill) ──
-        st.download_button(
-            label="Download Assessment Report (PDF)",
-            data=pdf_bytes,
-            file_name=report_filename,
-            mime="application/pdf",
-            use_container_width=False,
-            key="download_assessment_report_pdf"
-        )
+        # ── 4. STRICTLY CENTERED CLINICAL PDF REPORT DOWNLOAD ──
+        st.markdown('<div class="report-download-wrapper">', unsafe_allow_html=True)
+        col_dl_l, col_dl_c, col_dl_r = st.columns([1, 2, 1])
+        with col_dl_c:
+            st.download_button(
+                label="Download Assessment Report (PDF)",
+                data=pdf_bytes,
+                file_name=report_filename,
+                mime="application/pdf",
+                use_container_width=True,
+                key="download_assessment_report_pdf"
+            )
+        st.markdown('</div>', unsafe_allow_html=True)
 
         # Direct client-side blob download trigger & toast confirmation hook
         components.html(
