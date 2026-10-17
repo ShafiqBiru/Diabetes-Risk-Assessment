@@ -96,7 +96,7 @@ FEATURE_META = {
     },
     "BloodPressure": {
         "label": "Diastolic Blood Pressure (DBP)",
-        "min": 40, "max": 140, "default": 70, "step": 1,
+        "min": 40, "max": 130, "default": 70, "step": 1,
         "unit": "mm Hg", "type": int, "primary": True,
         "icon": "heart_pulse", "badge": "icon-badge-crimson",
         "norm_desc": "Normal Baseline: < 80 mm Hg",
@@ -682,24 +682,44 @@ button[data-testid="baseButton-secondary"]:hover {
     box-shadow: 0 4px 12px rgba(0, 122, 255, 0.15) !important;
 }
 
-/* ── PDF Download Button ────────────────────────────────── */
+/* ── PDF Download Button (Centered Apple Pill) ───────────── */
+div[data-testid="stDownloadButton"] {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    margin: 24px auto !important;
+    width: 100% !important;
+}
 div[data-testid="stDownloadButton"] > button {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.65) 0%, rgba(255, 255, 255, 0.40) 100%) !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: auto !important;
+    max-width: fit-content !important;
+    padding: 12px 28px !important;
+    border-radius: 9999px !important;
+    font-weight: 600 !important;
+    font-size: 0.92rem !important;
+    letter-spacing: -0.01em !important;
+    border: 1px solid rgba(0, 122, 255, 0.35) !important;
+    background: rgba(0, 122, 255, 0.08) !important;
     color: #007AFF !important;
-    font-weight: 700 !important;
-    font-size: 0.90rem !important;
-    border-radius: 14px !important;
-    border: 1.5px solid rgba(0, 122, 255, 0.4) !important;
-    padding: 0.65rem 1.4rem !important;
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05) !important;
-    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    backdrop-filter: blur(20px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+    box-shadow: 0 4px 14px rgba(0, 122, 255, 0.12) !important;
+    transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    cursor: pointer !important;
 }
 div[data-testid="stDownloadButton"] > button:hover {
-    background: linear-gradient(135deg, #007AFF 0%, #0056B3 100%) !important;
+    background: #007AFF !important;
     color: #FFFFFF !important;
-    border-color: transparent !important;
-    transform: translateY(-2px) !important;
+    border-color: #007AFF !important;
+    transform: translateY(-2px) scale(1.02) !important;
     box-shadow: 0 8px 24px rgba(0, 122, 255, 0.35) !important;
+}
+div[data-testid="stDownloadButton"] > button:active {
+    transform: translateY(0) scale(0.99) !important;
+    box-shadow: 0 2px 8px rgba(0, 122, 255, 0.25) !important;
 }
 
 /* ── Risk Cards ─────────────────────────────────────────── */
@@ -865,17 +885,21 @@ div[data-testid="stDownloadButton"] > button:hover {
     margin-top: 1.25rem;
 }
 
-/* ── Expander Glass Styling ─────────────────────────────── */
-div[data-testid="stExpander"] {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.40) 0%, rgba(255, 255, 255, 0.22) 100%) !important;
+/* ── Expander Glass Styling (Borderless Container) ───────── */
+div[data-testid="stExpander"],
+div[data-testid="stExpander"] details {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.38) 0%, rgba(255, 255, 255, 0.22) 100%) !important;
     backdrop-filter: blur(28px) saturate(210%) !important;
     -webkit-backdrop-filter: blur(28px) saturate(210%) !important;
     border-radius: 18px !important;
-    border: 1px solid rgba(255, 255, 255, 0.45) !important;
-    border-top: 1px solid rgba(255, 255, 255, 0.80) !important;
+    border: none !important;
     box-shadow: 0 8px 24px 0 rgba(0, 0, 0, 0.04) !important;
     margin-top: 0.65rem !important;
     overflow: hidden !important;
+}
+div[data-testid="stExpander"] summary,
+div[data-testid="stExpander"] details summary {
+    border: none !important;
 }
 div[data-testid="stExpander"] details summary {
     font-weight: 700 !important;
@@ -2065,6 +2089,36 @@ def inject_client_sync_engine():
                         }
                     }
                 });
+
+                // 4. Download Assessment Report Vector SVG Icon
+                const dlContainers = rootDoc.querySelectorAll('div[data-testid="stDownloadButton"]');
+                dlContainers.forEach(dlContainer => {
+                    const btn = dlContainer.querySelector('button');
+                    if (btn) {
+                        const p = btn.querySelector('p') || btn;
+                        if (p && p.innerText && (p.innerText.includes('📄') || p.innerText.includes('📥'))) {
+                            p.innerText = p.innerText.replace('📄', '').replace('📥', '').trim();
+                        }
+                        if (!btn.querySelector('.apple-report-svg-icon')) {
+                            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                            svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+                            svg.setAttribute('width', '18');
+                            svg.setAttribute('height', '18');
+                            svg.setAttribute('viewBox', '0 0 24 24');
+                            svg.setAttribute('fill', 'none');
+                            svg.setAttribute('stroke', 'currentColor');
+                            svg.setAttribute('stroke-width', '2');
+                            svg.setAttribute('stroke-linecap', 'round');
+                            svg.setAttribute('stroke-linejoin', 'round');
+                            svg.setAttribute('class', 'apple-report-svg-icon');
+                            svg.style.marginRight = '8px';
+                            svg.style.display = 'inline-block';
+                            svg.style.verticalAlign = 'middle';
+                            svg.innerHTML = '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="12" y2="18"></line><line x1="15" y1="15" x2="12" y2="18"></line>';
+                            btn.insertBefore(svg, btn.firstChild);
+                        }
+                    }
+                });
             }
 
             // ── DIRECT CLIENT-SIDE BLOB DOWNLOAD & TOAST CONFIRMATION ──
@@ -2179,8 +2233,6 @@ def main():
         st.session_state["profile_selection"] = "Custom Profile"
     if "preset_selector" not in st.session_state:
         st.session_state["preset_selector"] = "Custom Profile"
-    if "bp_mode" not in st.session_state:
-        st.session_state["bp_mode"] = "Detailed Entry (Systolic & Diastolic)"
 
     # Initialize session states for all features
     for f in FEATURE_META.keys():
@@ -2335,143 +2387,85 @@ def main():
                 )
             input_values["Glucose"] = st.session_state.get("num_Glucose", st.session_state["slider_Glucose"])
 
-            # 2. Blood Pressure Architecture (Apple Segmented Control)
-            st.markdown('<div style="margin-top: 10px; margin-bottom: 5px; font-size: 0.74rem; font-weight: 700; color: #8E8E93; text-transform: uppercase; letter-spacing: 0.5px;">Blood Pressure Input Architecture</div>', unsafe_allow_html=True)
-            bp_options = ["Detailed Entry (Systolic & Diastolic)", "Direct Entry (Diastolic Only)"]
-            bp_index = 0 if "Detailed" in st.session_state.get("bp_mode", "Detailed") else 1
-            st.radio(
-                "Blood Pressure Input Architecture",
-                options=bp_options,
-                index=bp_index,
-                horizontal=True,
-                key="bp_mode_radio",
-                on_change=lambda: st.session_state.update({"bp_mode": st.session_state["bp_mode_radio"]}),
-                label_visibility="collapsed",
-            )
-            is_detailed_bp = "Detailed" in st.session_state.get("bp_mode", "Detailed")
+            # 2. Blood Pressure (Detailed Entry Only: SBP + DBP)
+            # Systolic Blood Pressure (SBP)
+            meta_sbp = FEATURE_META["SystolicBP"]
+            st.markdown(f'''
+            <div class="metric-row-header" style="margin-top: 6px;">
+                <div class="metric-title-group">
+                    {render_badge(meta_sbp["icon"], meta_sbp["badge"])}
+                    <span class="metric-row-title">{meta_sbp["label"]}</span>
+                </div>
+                <span class="metric-row-unit">({meta_sbp["unit"]})</span>
+            </div>
+            ''', unsafe_allow_html=True)
+            c_slide, c_num = st.columns([3.4, 1.25])
+            with c_slide:
+                st.slider(
+                    label=meta_sbp["label"],
+                    min_value=meta_sbp["type"](meta_sbp["min"]),
+                    max_value=meta_sbp["type"](meta_sbp["max"]),
+                    step=meta_sbp["type"](meta_sbp["step"]) if meta_sbp["type"] == float else meta_sbp["step"],
+                    key="slider_SystolicBP",
+                    on_change=on_custom_input_change,
+                    args=("SystolicBP", "slider"),
+                    label_visibility="collapsed",
+                )
+            with c_num:
+                st.number_input(
+                    label=meta_sbp["label"],
+                    min_value=meta_sbp["type"](meta_sbp["min"]),
+                    max_value=meta_sbp["type"](meta_sbp["max"]),
+                    step=meta_sbp["type"](meta_sbp["step"]) if meta_sbp["type"] == float else meta_sbp["step"],
+                    key="num_SystolicBP",
+                    on_change=on_custom_input_change,
+                    args=("SystolicBP", "num"),
+                    label_visibility="collapsed",
+                )
+            input_values["SystolicBP"] = st.session_state.get("num_SystolicBP", st.session_state["slider_SystolicBP"])
 
-            if is_detailed_bp:
-                # Mode A: Detailed Entry (Systolic SBP and Diastolic DBP)
-                # Systolic Blood Pressure (SBP)
-                meta_sbp = FEATURE_META["SystolicBP"]
-                st.markdown(f'''
-                <div class="metric-row-header" style="margin-top: 6px;">
-                    <div class="metric-title-group">
-                        {render_badge(meta_sbp["icon"], meta_sbp["badge"])}
-                        <span class="metric-row-title">{meta_sbp["label"]}</span>
-                    </div>
-                    <span class="metric-row-unit">({meta_sbp["unit"]})</span>
+            # Diastolic Blood Pressure (DBP)
+            meta_dbp = FEATURE_META["BloodPressure"]
+            st.markdown(f'''
+            <div class="metric-row-header" style="margin-top: 6px;">
+                <div class="metric-title-group">
+                    {render_badge(meta_dbp["icon"], meta_dbp["badge"])}
+                    <span class="metric-row-title">{meta_dbp["label"]}</span>
                 </div>
-                ''', unsafe_allow_html=True)
-                c_slide, c_num = st.columns([3.4, 1.25])
-                with c_slide:
-                    st.slider(
-                        label=meta_sbp["label"],
-                        min_value=meta_sbp["type"](meta_sbp["min"]),
-                        max_value=meta_sbp["type"](meta_sbp["max"]),
-                        step=meta_sbp["type"](meta_sbp["step"]) if meta_sbp["type"] == float else meta_sbp["step"],
-                        key="slider_SystolicBP",
-                        on_change=on_custom_input_change,
-                        args=("SystolicBP", "slider"),
-                        label_visibility="collapsed",
-                    )
-                with c_num:
-                    st.number_input(
-                        label=meta_sbp["label"],
-                        min_value=meta_sbp["type"](meta_sbp["min"]),
-                        max_value=meta_sbp["type"](meta_sbp["max"]),
-                        step=meta_sbp["type"](meta_sbp["step"]) if meta_sbp["type"] == float else meta_sbp["step"],
-                        key="num_SystolicBP",
-                        on_change=on_custom_input_change,
-                        args=("SystolicBP", "num"),
-                        label_visibility="collapsed",
-                    )
-                input_values["SystolicBP"] = st.session_state.get("num_SystolicBP", st.session_state["slider_SystolicBP"])
+                <span class="metric-row-unit">({meta_dbp["unit"]})</span>
+            </div>
+            ''', unsafe_allow_html=True)
+            c_slide, c_num = st.columns([3.4, 1.25])
+            with c_slide:
+                st.slider(
+                    label=meta_dbp["label"],
+                    min_value=meta_dbp["type"](meta_dbp["min"]),
+                    max_value=meta_dbp["type"](meta_dbp["max"]),
+                    step=meta_dbp["type"](meta_dbp["step"]) if meta_dbp["type"] == float else meta_dbp["step"],
+                    key="slider_BloodPressure",
+                    on_change=on_custom_input_change,
+                    args=("BloodPressure", "slider"),
+                    label_visibility="collapsed",
+                )
+            with c_num:
+                st.number_input(
+                    label=meta_dbp["label"],
+                    min_value=meta_dbp["type"](meta_dbp["min"]),
+                    max_value=meta_dbp["type"](meta_dbp["max"]),
+                    step=meta_dbp["type"](meta_dbp["step"]) if meta_dbp["type"] == float else meta_dbp["step"],
+                    key="num_BloodPressure",
+                    on_change=on_custom_input_change,
+                    args=("BloodPressure", "num"),
+                    label_visibility="collapsed",
+                )
+            input_values["BloodPressure"] = st.session_state.get("num_BloodPressure", st.session_state["slider_BloodPressure"])
+            is_detailed_bp = True
 
-                # Diastolic Blood Pressure (DBP)
-                meta_dbp = FEATURE_META["BloodPressure"]
-                st.markdown(f'''
-                <div class="metric-row-header" style="margin-top: 6px;">
-                    <div class="metric-title-group">
-                        {render_badge(meta_dbp["icon"], meta_dbp["badge"])}
-                        <span class="metric-row-title">{meta_dbp["label"]}</span>
-                    </div>
-                    <span class="metric-row-unit">({meta_dbp["unit"]})</span>
-                </div>
-                ''', unsafe_allow_html=True)
-                c_slide, c_num = st.columns([3.4, 1.25])
-                with c_slide:
-                    st.slider(
-                        label=meta_dbp["label"],
-                        min_value=meta_dbp["type"](meta_dbp["min"]),
-                        max_value=meta_dbp["type"](meta_dbp["max"]),
-                        step=meta_dbp["type"](meta_dbp["step"]) if meta_dbp["type"] == float else meta_dbp["step"],
-                        key="slider_BloodPressure",
-                        on_change=on_custom_input_change,
-                        args=("BloodPressure", "slider"),
-                        label_visibility="collapsed",
-                    )
-                with c_num:
-                    st.number_input(
-                        label=meta_dbp["label"],
-                        min_value=meta_dbp["type"](meta_dbp["min"]),
-                        max_value=meta_dbp["type"](meta_dbp["max"]),
-                        step=meta_dbp["type"](meta_dbp["step"]) if meta_dbp["type"] == float else meta_dbp["step"],
-                        key="num_BloodPressure",
-                        on_change=on_custom_input_change,
-                        args=("BloodPressure", "num"),
-                        label_visibility="collapsed",
-                    )
-                input_values["BloodPressure"] = st.session_state.get("num_BloodPressure", st.session_state["slider_BloodPressure"])
-
-                st.markdown('''
-                <div class="bp-telemetry-note">
-                    Dual BP Telemetry: Systolic SBP provides AHA cardiovascular staging &amp; lifestyle guidance, while Diastolic DBP feeds the ML classification model.
-                </div>
-                ''', unsafe_allow_html=True)
-            else:
-                # Mode B: Direct Entry (Diastolic Blood Pressure Only)
-                meta_dbp = FEATURE_META["BloodPressure"]
-                st.markdown(f'''
-                <div class="metric-row-header" style="margin-top: 6px;">
-                    <div class="metric-title-group">
-                        {render_badge(meta_dbp["icon"], meta_dbp["badge"])}
-                        <span class="metric-row-title">{meta_dbp["label"]}</span>
-                    </div>
-                    <span class="metric-row-unit">({meta_dbp["unit"]})</span>
-                </div>
-                ''', unsafe_allow_html=True)
-                c_slide, c_num = st.columns([3.4, 1.25])
-                with c_slide:
-                    st.slider(
-                        label=meta_dbp["label"],
-                        min_value=meta_dbp["type"](meta_dbp["min"]),
-                        max_value=meta_dbp["type"](meta_dbp["max"]),
-                        step=meta_dbp["type"](meta_dbp["step"]) if meta_dbp["type"] == float else meta_dbp["step"],
-                        key="slider_BloodPressure",
-                        on_change=on_custom_input_change,
-                        args=("BloodPressure", "slider"),
-                        label_visibility="collapsed",
-                    )
-                with c_num:
-                    st.number_input(
-                        label=meta_dbp["label"],
-                        min_value=meta_dbp["type"](meta_dbp["min"]),
-                        max_value=meta_dbp["type"](meta_dbp["max"]),
-                        step=meta_dbp["type"](meta_dbp["step"]) if meta_dbp["type"] == float else meta_dbp["step"],
-                        key="num_BloodPressure",
-                        on_change=on_custom_input_change,
-                        args=("BloodPressure", "num"),
-                        label_visibility="collapsed",
-                    )
-                input_values["BloodPressure"] = st.session_state.get("num_BloodPressure", st.session_state["slider_BloodPressure"])
-                input_values["SystolicBP"] = 120
-
-                st.markdown('''
-                <div class="bp-telemetry-note" style="background: rgba(0, 122, 255, 0.06); padding: 8px 12px; border-radius: 10px; border-left: 3px solid #007AFF; margin-top: 6px; margin-bottom: 10px;">
-                    ℹ️ <strong>Direct Entry Note:</strong> Standard diabetes risk datasets train primarily on Diastolic Blood Pressure (the bottom number).
-                </div>
-                ''', unsafe_allow_html=True)
+            st.markdown('''
+            <div class="bp-telemetry-note">
+                Dual BP Telemetry: Systolic SBP provides AHA cardiovascular staging &amp; lifestyle guidance, while Diastolic DBP feeds the ML classification model.
+            </div>
+            ''', unsafe_allow_html=True)
 
             # 3. BMI and Age
             for feat in ["BMI", "Age"]:
@@ -2747,21 +2741,15 @@ def main():
         elif g >= 100:
             flags.append("Fasting Glucose 100–125 mg/dL — Impaired fasting glucose (Prediabetes)")
 
-        if is_detailed_bp:
-            sbp = input_values.get("SystolicBP", 120)
-            dbp = input_values.get("BloodPressure", 70)
-            if sbp >= 140 or dbp >= 90:
-                flags.append(f"Blood Pressure {sbp}/{dbp} mm Hg — Stage 2 Hypertension range (High cardiovascular & metabolic risk)")
-            elif sbp >= 130 or dbp >= 80:
-                flags.append(f"Blood Pressure {sbp}/{dbp} mm Hg — Stage 1 Hypertension / Elevated (Target < 120/80 mm Hg)")
-            elif sbp >= 120 and dbp < 80:
-                flags.append(f"Blood Pressure {sbp}/{dbp} mm Hg — Elevated Systolic Blood Pressure (AHA Guidelines)")
-        else:
-            dbp = input_values.get("BloodPressure", 70)
-            if dbp >= 90:
-                flags.append(f"Diastolic Blood Pressure (DBP) {dbp} mm Hg — Stage 2 Diastolic Hypertension (Target < 80 mm Hg)")
-            elif dbp >= 80:
-                flags.append(f"Diastolic Blood Pressure (DBP) {dbp} mm Hg — Stage 1 Diastolic Hypertension (Target < 80 mm Hg)")
+        is_detailed_bp = True
+        sbp = input_values.get("SystolicBP", 120)
+        dbp = input_values.get("BloodPressure", 70)
+        if sbp >= 140 or dbp >= 90:
+            flags.append(f"Blood Pressure {sbp}/{dbp} mm Hg — Stage 2 Hypertension range (High cardiovascular & metabolic risk)")
+        elif sbp >= 130 or dbp >= 80:
+            flags.append(f"Blood Pressure {sbp}/{dbp} mm Hg — Stage 1 Hypertension / Elevated (Target < 120/80 mm Hg)")
+        elif sbp >= 120 and dbp < 80:
+            flags.append(f"Blood Pressure {sbp}/{dbp} mm Hg — Elevated Systolic Blood Pressure (AHA Guidelines)")
 
         bmi_val = input_values.get("BMI", 0)
         if bmi_val >= 30:
@@ -2905,49 +2893,6 @@ def main():
                 </div>
                 ''', unsafe_allow_html=True)
 
-            # ── 4. PDF CLINICAL REPORT GENERATION & DOWNLOAD BUTTON ──
-            st.markdown('<div style="margin-top: 1.2rem;"></div>', unsafe_allow_html=True)
-            st.download_button(
-                label="📄 Download Assessment Report (PDF)",
-                data=pdf_bytes,
-                file_name=report_filename,
-                mime="application/pdf",
-                use_container_width=True,
-                key="download_assessment_report_pdf"
-            )
-
-            # Direct client-side blob download trigger & toast confirmation hook
-            components.html(
-                f"""
-                <script>
-                    (function() {{
-                        const rootDoc = window.parent.document || document;
-                        window.parent.__currentPdfBase64 = "{b64_pdf}";
-                        window.parent.__currentPdfFilename = "{report_filename}";
-
-                        function attachDownloadHook() {{
-                            const dlContainer = rootDoc.querySelector('div[data-testid="stDownloadButton"]');
-                            if (!dlContainer) return;
-                            const btn = dlContainer.querySelector('button');
-                            if (btn && !btn.dataset.appleDownloadBound) {{
-                                btn.dataset.appleDownloadBound = "true";
-                                btn.addEventListener('click', function(e) {{
-                                    if (window.parent.triggerDirectBlobDownload) {{
-                                        window.parent.triggerDirectBlobDownload();
-                                    }}
-                                }}, false);
-                            }}
-                        }}
-                        attachDownloadHook();
-                        setTimeout(attachDownloadHook, 120);
-                        setTimeout(attachDownloadHook, 400);
-                    }})();
-                </script>
-                """,
-                height=0,
-                width=0,
-            )
-
         with res_right:
             gauge_buf = plot_risk_gauge(prob_diabetic)
             st.image(gauge_buf, use_container_width=True)
@@ -3009,6 +2954,52 @@ def main():
         )
 
         st.markdown(rec_container_html, unsafe_allow_html=True)
+
+        # ── 4. CENTERED CLINICAL PDF REPORT DOWNLOAD (Apple Pill) ──
+        st.download_button(
+            label="Download Assessment Report (PDF)",
+            data=pdf_bytes,
+            file_name=report_filename,
+            mime="application/pdf",
+            use_container_width=False,
+            key="download_assessment_report_pdf"
+        )
+
+        # Direct client-side blob download trigger & toast confirmation hook
+        components.html(
+            f"""
+            <script>
+                (function() {{
+                    const rootDoc = window.parent.document || document;
+                    window.parent.__currentPdfBase64 = "{b64_pdf}";
+                    window.parent.__currentPdfFilename = "{report_filename}";
+
+                    function attachDownloadHook() {{
+                        const dlContainer = rootDoc.querySelector('div[data-testid="stDownloadButton"]');
+                        if (!dlContainer) return;
+                        const btn = dlContainer.querySelector('button');
+                        if (btn && !btn.dataset.appleDownloadBound) {{
+                            btn.dataset.appleDownloadBound = "true";
+                            btn.addEventListener('click', function(e) {{
+                                if (window.parent.triggerDirectBlobDownload) {{
+                                    window.parent.triggerDirectBlobDownload();
+                                }}
+                            }}, false);
+                        }}
+                        if (window.parent.updateAppleIcons) {{
+                            window.parent.updateAppleIcons();
+                        }}
+                    }}
+                    attachDownloadHook();
+                    setTimeout(attachDownloadHook, 120);
+                    setTimeout(attachDownloadHook, 400);
+                }})();
+            </script>
+            """,
+            height=0,
+            width=0,
+        )
+
 
         # Regulatory Disclaimer
         st.markdown(f'''
